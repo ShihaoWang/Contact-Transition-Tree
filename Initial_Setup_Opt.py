@@ -128,7 +128,7 @@ def Robot_Init_Opt_fn(world, state_init, contact_link_dictionary, contact_status
     lb, ub = Constraint_Bounds(y_type)
     Robot_Init_Opt.lb = lb;                     Robot_Init_Opt.ub = ub
     cfg = snoptConfig()
-    cfg.printLevel = 1;                         cfg.printFile = "result.txt"
+    cfg.printLevel = 0;                         cfg.printFile = "result.txt"
     cfg.majorIterLimit = 300
     # ipdb.set_trace()
 

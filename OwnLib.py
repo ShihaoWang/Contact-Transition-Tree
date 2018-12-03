@@ -63,8 +63,9 @@ def Read_Txt_fn(file_name):
             Empty_List.append(float(Txt_File_Str_i))
     return Empty_List
 
-def Write_Txt_fn(file_name, list_array):
-    Txt_File = open(file_name, 'w')
+def Write_Txt_fn(file_name, list_array, path_name):
+    file_path_name = path_name + file_name
+    Txt_File = open(file_path_name, 'w')
     for list_array_i in list_array:
         print>>Txt_File, list_array_i
     Txt_File.close()
@@ -93,30 +94,33 @@ def Kinetic_Energy_fn(sim_robot, x):
     return KE_val
 
 def State_Loader_fn(*args):
-    if len(args) == 1:
+    if len(args) == 2:
         # In this case, the robot is only given the configuration file
-        DOF, Config_Init = Configuration_Loader_fn(args[0])
+        config_file_path = args[1] + args[0]
+        DOF, Config_Init = Configuration_Loader_fn(config_file_path)
         # Then the Velocty_Init is set to be a zero value list
         Velocity_Init = []
         for i in range(0,DOF):
             Velocity_Init.append(0)
     else:
-        if len(args) == 2:
-            Config_Init = Read_Txt_fn(args[0])
-            Velocity_Init = Read_Txt_fn(args[1])
+        if len(args) == 3:
+            config_file_path = args[2] + args[0]
+            velocity_file_path = args[2] + args[1]
+            Config_Init = Read_Txt_fn(config_file_path)
+            Velocity_Init = Read_Txt_fn(velocity_file_path)
             DOF = len(Config_Init)
         else:
             raise RuntimeError("Input name should be either one config file or two txt files!")
     return DOF, Config_Init, Velocity_Init
 
 def State_Writer_fn(*args):
-    if len(args)==2:
+    if len(args)==3:
         # In this case,the configuration is written to a file with .config
-        Configuration_Writer_fn(args[0], args[1])
+        Configuration_Writer_fn(args[0], args[1], args[2])
     else:
-        if len(args) == 4:
-            Write_Txt_fn(args[2], args[0])
-            Write_Txt_fn(args[3], args[1])
+        if len(args) == 5:
+            Write_Txt_fn(args[2], args[0], args[4])
+            Write_Txt_fn(args[3], args[1], args[4])
         else:
             raise RuntimeError("Inputs should be either one config with string name or config and velocity with string names!")
 
@@ -124,7 +128,9 @@ def Configuration_Writer_fn(*args):
     # This function is used to write the given configuration into a file with .config
     file_list = args[0]
     file_name = args[1]
-    file_object  = open(file_name, 'w')
+    path_name = args[2]
+    file_path_name = path_name + file_name
+    file_object  = open(file_path_name, 'w')
     DOF = len(file_list)
     file_object.write(str(DOF))
     file_object.write('\t')
@@ -247,14 +253,15 @@ def String_List_to_Number_List(str_list, string_name):
 
 # Related to the operation of the robot contact link
 
-def Contact_Link_Reader(File_Name):
+def Contact_Link_Reader(File_Name, Path_Name):
     # This function is used to read-in the formation of the certain link and its associated contact points
     # The output of this function is a dictionary of several keys with multiple list values
     # File_Name = "./User_File/Contact_Link.txt"
     Contact_Link_Dictionary = dict()
     # The format of this function should be an integet with a list of contact points
     Link_Number_i = -1
-    with open(File_Name) as Txt_File:
+    File_Path_Name = Path_Name +File_Name
+    with open(File_Path_Name) as Txt_File:
         Txt_File_Str = Txt_File.read().splitlines()
         Dictionary_Value_Add_Flag = 0
         for Txt_File_Str_i in Txt_File_Str:
@@ -272,14 +279,15 @@ def Contact_Link_Reader(File_Name):
                 Contact_Link_Dictionary[Link_Number_i].append(Txt_File_Flt_i)
     return Contact_Link_Dictionary
 
-def Contact_Status_Reader(File_Name):
+def Contact_Status_Reader(File_Name, Path_Name):
     # This function is used to read-in the formation of the certain link and its associated contact points
     # The output of this function is a dictionary of several keys with multiple list values
     # File_Name = "./User_File/Contact_Link.txt"
     Contact_Status_Dictionary = dict()
     # The format of this function should be an integet with a list of contact points
     Link_Number_i = -1
-    with open(File_Name) as Txt_File:
+    File_Path_Name = Path_Name + File_Name
+    with open(File_Path_Name) as Txt_File:
         Txt_File_Str = Txt_File.read().splitlines()
         Dictionary_Value_Add_Flag = 0
         for Txt_File_Str_i in Txt_File_Str:

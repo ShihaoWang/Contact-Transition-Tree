@@ -28,6 +28,9 @@ def main():
 
     # This funciton is used for the multi-contact humanoid push recovery
     # The default robot to be loaded is the HRP2 robot in this same folder
+    Robot_Option = "./User_File/HRP2_Robot/"
+    # Robot_Option = "./User_File/JQ_Robot/"
+    ipdb.set_trace()
 
     print "This funciton is used for the 3-D Humanoid Multi-Contact Fall Mitigation"
     if len(sys.argv)<=1:
@@ -43,24 +46,25 @@ def main():
     # The definition of the environment into an efficient way
     global Terr_Model;                  Terr_Model = Terr_Model_Cal(world)
 
-    Robot_Option = "./User_File"
-
     # The following function can be used in two ways: the first way is to load the Config_Init.config file while the second way is to load two
-    # DOF, Config_Init, Velocity_Init = State_Loader_fn("./User_File/Init_Config.config")
-    DOF, Config_Init, Velocity_Init = State_Loader_fn("./User_File/Init_Config.txt", "./User_File/Init_Velocity.txt")
+    # DOF, Config_Init, Velocity_Init = State_Loader_fn("Init_Config.config", Robot_Option)
+    DOF, Config_Init, Velocity_Init = State_Loader_fn("Init_Config.txt", "Init_Velocity.txt", Robot_Option)
 
-    # State_Writer_fn(Config_Init, "./User_File/Init_Config_from_txt.config")
+    # State_Writer_fn(Config_Init, "Init_Config_from_txt.config", Robot_Option)
+    # State_Writer_fn(Config_Init, Velocity_Init, "Inn_Config.txt", "Inn_Velo.txt",Robot_Option)
 
     global System_DOF;                  System_DOF = DOF
 
-    global Contact_Link_Dictionary;     Contact_Link_Dictionary = Contact_Link_Reader("./User_File/Contact_Link.txt")
-    global Contact_Status_Dictionary;   Contact_Status_Dictionary = Contact_Status_Reader("./User_File/Init_Contact.txt")
+    global Contact_Link_Dictionary;     Contact_Link_Dictionary = Contact_Link_Reader("Contact_Link.txt", Robot_Option)
+    global Contact_Status_Dictionary;   Contact_Status_Dictionary = Contact_Status_Reader("Init_Contact.txt", Robot_Option)
 
     # According to the initial condition of the robot contact status, a basic optimization may have to be contacted to enforce the initial constraints.
 
     # # # Now it is the validation of the feasibility of the given initial condition
     State_Init = List_Append_fn(Config_Init, Velocity_Init)
     Config_Init, Velocity_Init = Robot_Init_Opt_fn(world, State_Init, Contact_Link_Dictionary, Contact_Status_Dictionary, Terr_Model)
+
+
 
     # Given the pre-optimized robot state, we could directly load em in
     robot_viewer = MyGLViewer(world, Config_Init, Velocity_Init)
