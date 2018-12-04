@@ -75,6 +75,8 @@ def Initial_Constraint_Eqn(world, state_init, contact_link_dictionary, contact_s
     robot_contact_link_list = contact_status_dictionary.keys()
     # ipdb.set_trace()
 
+    # Contact_Link_PosNVel_List = Contact_Link_PosNVel(sim_robot, contact_link_dictionary, -1)
+
     for i in robot_contact_link_list:
         # For each link, there are some contact points
         robot_link_i_contact_points = contact_link_dictionary[i]
@@ -105,7 +107,7 @@ def Initial_Constraint_Eqn(world, state_init, contact_link_dictionary, contact_s
     KE_ref = 30
     KE_val = Kinetic_Energy_fn(sim_robot, x)
 
-    y_val.append((KE_val - KE_ref) * (KE_val - KE_ref));                                y_type.append(0)
+    y_val.append(KE_val - KE_ref);                                y_type.append(0)
     return y_val, y_type
 
 def Robot_Init_Opt_fn(world, state_init, contact_link_dictionary, contact_status_dictionary, terr_model):
@@ -128,7 +130,8 @@ def Robot_Init_Opt_fn(world, state_init, contact_link_dictionary, contact_status
     lb, ub = Constraint_Bounds(y_type)
     Robot_Init_Opt.lb = lb;                     Robot_Init_Opt.ub = ub
     cfg = snoptConfig()
-    cfg.printLevel = 0;                         cfg.printFile = "result.txt"
+    cfg.printLevel = 1;
+    # cfg.printFile = "result.txt"
     cfg.majorIterLimit = 300
     # ipdb.set_trace()
 

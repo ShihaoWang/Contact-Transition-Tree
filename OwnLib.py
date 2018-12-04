@@ -49,9 +49,14 @@ def List_Norm_fn(given_list):
 
 def List_Append_fn(list_a, list_b):
     # This function is used to append the list_b to the end of list_a
+    list_a_ref = list_a[:]
     for i in range(0, len(list_b)):
-        list_a.append(list_b[i])
-    return list_a
+        list_a_ref.append(list_b[i])
+    return list_a_ref
+
+def List_Flatten_fn(l):
+    flat_list = [item for sublist in l for item in sublist]
+    return flat_list
 
 # This part of functions is used for file operation: read, write
 def Read_Txt_fn(file_name):
@@ -343,5 +348,3 @@ def Contact_Link_i_PosNVel(sim_robot, link_index, link_local_extremities):
         Contact_Link_PosNVel_i["Pos"].append(link_local_extremity_i_Pos)
         Contact_Link_PosNVel_i["Vel"].append(link_local_extremity_i_Vel)
     return Contact_Link_PosNVel_i
-
-# def Contact_Link_Dist(world, sim_robot, )
