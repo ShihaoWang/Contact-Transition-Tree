@@ -10,7 +10,6 @@ import numpy as np
 import math, ipdb
 from OwnLib import *
 from Terrain_Fun import *
-from General_Opt import *
 
 # This function is used to setup the initial optimization problem
 

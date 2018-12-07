@@ -338,6 +338,7 @@ def Contact_Link_i_PosNVel(sim_robot, link_index, link_local_extremities):
     robot_link_local_extremities_num = len(link_local_extremities)
 
     Contact_Link_PosNVel_i = dict()
+    Contact_Link_PosNVel_i["Link"] = link_index
     Contact_Link_PosNVel_i["Pos"] = []
     Contact_Link_PosNVel_i["Vel"] = []
 
@@ -348,3 +349,29 @@ def Contact_Link_i_PosNVel(sim_robot, link_index, link_local_extremities):
         Contact_Link_PosNVel_i["Pos"].append(link_local_extremity_i_Pos)
         Contact_Link_PosNVel_i["Vel"].append(link_local_extremity_i_Vel)
     return Contact_Link_PosNVel_i
+
+def List_Obj_Update(list_value, constraint_type, y_val, y_type):
+    # This function is used to update the list according to the function value
+    for i in range(0, len(list_value)):
+        y_val.append(list_value[i])
+        y_type.append(constraint_type)
+
+def ListOfLists_Print(list_of_lists):
+    # This function is used to print out the element of list of lists
+    NumberOfLists = len(list_of_lists)
+    for i in range(0, NumberOfLists):
+        print list_of_lists[i]
+
+def Constraint_Bounds(y_type):
+    # This function is used generate the bounds for the constraint equations
+    lb = []
+    ub = []
+    High_Bd_Val = float('Inf')
+    for i in range(0, len(y_type)):
+        if(y_type[i]>0):
+            lb.append(0)
+            ub.append(High_Bd_Val)
+        else:
+            lb.append(0)
+            ub.append(0)
+    return lb, ub

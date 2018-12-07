@@ -19,17 +19,21 @@ from Visualization_Fun import *
 from Initial_Setup_Opt import *
 from Node_Fun import *
 from Seed_Config_Fun import *
+from Seed_Guess_Fun import *
+from Dynamics_Fun import *
+from CTT_Fun import *
 
 # Some system parameters
 Terr_Model = []                                      # The generalized terrain model structure
 Contact_Link_Dictionary = dict()                     # Information of the robot contact link extremities
 All_TreeNodes = []                                   # All of the tree nodes
 Frontier_Nodes = []                                  # Frontier_Nodes
-
+Robot_Option =""
 def main():
 
     # This funciton is used for the multi-contact humanoid push recovery
     # The default robot to be loaded is the HRP2 robot in this same folder
+    global Robot_Option;
     Robot_Option = "./User_File/HRP2_Robot/"
     # Robot_Option = "./User_File/JQ_Robot/"
     # ipdb.set_trace()
@@ -72,8 +76,8 @@ def main():
     # Root node initialization
     Root_Node = TreeNode_Dict_Init(world, Config_Init, Velocity_Init, Contact_Link_Dictionary, Contact_Status_Dictionary_Init, All_TreeNodes)
     Frontier_Add(Frontier_Nodes, Root_Node)
-    Seed_Conf_Optimization_ObjNConstraint(world, Root_Node, Root_Node, Contact_Link_Dictionary, Terr_Model, State_Init)
-
+    # Seed_Conf_Optimization_ObjNConstraint(world, Root_Node, Root_Node, Contact_Link_Dictionary, Terr_Model, State_Init)
+    # Seed_Guess_Gene(world, Root_Node, Root_Node, Contact_Link_Dictionary, Terr_Model, Robot_Option, 1.0, 8)
     while len(Frontier_Nodes)>0:
         pass
 
@@ -81,11 +85,12 @@ def main():
         * For the current node, first is the Node_Self_Opt to optimize a motion while maintain the current mode
         * if this does not work, then expand the current node into the adjacent nodes then do the Nodes_Connectivity_Opt
         """
+        Nodes_Optimization_fn(world, Root_Node, Root_Node, Contact_Link_Dictionary, Terr_Model, Robot_Option)
 
 
     # Given the pre-optimized robot state, we could directly load em in
     robot_viewer = MyGLViewer(world, Config_Init, Velocity_Init)
-    # ipdb.set_trace()
+    ipdb.set_trace()
 
     robot_viewer.drawContacts = True
     robot_viewer.drawSensors = True
