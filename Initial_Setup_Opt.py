@@ -87,7 +87,7 @@ def Initial_Constraint_Eqn(world, state_init, contact_link_dictionary, contact_s
             Contact_Link_i_PosNVel_Point_j_Vel = Contact_Link_i_PosNVel_List["Vel"][j]
             Contact_Link_i_PosNVel_Point_j_Vel_SoS = Dot_Product(Contact_Link_i_PosNVel_Point_j_Vel, Contact_Link_i_PosNVel_Point_j_Vel)        # Sum of Squares
 
-            Contact_Link_i_PosNVel_Point_j_Face_Dist, Contact_Link_i_PosNVel_Point_j_Edge_Dist = Robot_Link_2_All_Terr_Dist(Contact_Link_i_PosNVel_Point_j_Pos, terr_model)
+            Contact_Link_i_PosNVel_Point_j_Face_Dist, Contact_Link_i_PosNVel_Point_j_Edge_Dist, Contact_Link_i_Point_j_Normal = Robot_Link_2_All_Terr_Dist(Contact_Link_i_PosNVel_Point_j_Pos, terr_model)
 
             if Contact_Link_i_PosNVel_Point_j_status == 1:
                 # In this case, the constraint has to be active

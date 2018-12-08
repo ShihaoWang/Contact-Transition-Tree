@@ -17,7 +17,11 @@ def Cross_Product(a, b):
 
 def Dot_Product(list_a, list_b):
     # This is defined for list of arbitrary length
-    n = len(list_a)
+    if type(list_a) is list:
+        n = len(list_a)
+    else:
+        # <type 'numpy.ndarray'>
+        n = list_a.size
     list_a_dot_b = 0
     for i in range(0, n):
         list_a_dot_b = list_a_dot_b + list_a[i] * list_b[i]
@@ -229,6 +233,10 @@ def List_Mat_Multi_List_Vec_fn(list_matrix, list_vec):
     # This function is used to multiply the list matrix with a list vector
     # According to the default manner in Klampt, the matrix is defined in a column way so each three elements stand for a column instead of a row
     Dim = len(list_vec)
+    Dim_row = len(list_matrix)
+    Dim_col = len(list_matrix[0])
+    if Dim_row != Dim_col:
+        raise RuntimeError("Input is not a square matrix!\n")
     Res_List_Vec = []
     for i in range(0, Dim):
         Res_List_i = 0

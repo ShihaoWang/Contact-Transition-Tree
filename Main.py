@@ -69,9 +69,10 @@ def main():
     # # # Now it is the validation of the feasibility of the given initial condition
     State_Init = List_Append_fn(Config_Init, Velocity_Init)
 
-    # Config_Init, Velocity_Init = Robot_Init_Opt_fn(world, State_Init, Contact_Link_Dictionary, Contact_Status_Dictionary_Init, Terr_Model)
+    Config_Init, Velocity_Init = Robot_Init_Opt_fn(world, State_Init, Contact_Link_Dictionary, Contact_Status_Dictionary_Init, Terr_Model)
     # State_Writer_fn(Config_Init, Velocity_Init, "Opt_Init_Config.txt", "Opt_Init_Velocity.txt",Robot_Option)
 
+    # ipdb.set_trace()
     ## Now it is the contact transition tree optimization
     # Root node initialization
     Root_Node = TreeNode_Dict_Init(world, Config_Init, Velocity_Init, Contact_Link_Dictionary, Contact_Status_Dictionary_Init, All_TreeNodes)

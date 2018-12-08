@@ -16,15 +16,16 @@ def Robot_Link_2_All_Terr_Dist(robot_link_point, terr_model):
     terr_model_num = len(terr_model)
     Dist_2_Terr_Face_List = []
     Dist_2_Terr_Edge_List = []
+    Point_2_Terr_Normal_List = []
 
     for i in range(0, terr_model_num):
         terr_model_i = terr_model[i]
-        Dist_2_Terr_Face_i, Dist_2_Terr_Edge_i = Robot_Link_2_Terr_Dist(robot_link_point, terr_model_i)
+        Dist_2_Terr_Face_i, Dist_2_Terr_Edge_i, Point_2_Terr_Normal_i = Robot_Link_2_Terr_Dist(robot_link_point, terr_model_i)
         Dist_2_Terr_Face_List.append(Dist_2_Terr_Face_i)
         Dist_2_Terr_Edge_List.append(Dist_2_Terr_Edge_i)
-
+        Point_2_Terr_Normal_List.append(Point_2_Terr_Normal_i)
     Dist_2_Face_Index = Dist_2_Terr_Face_List.index(min(Dist_2_Terr_Face_List))
-    return Dist_2_Terr_Face_List[Dist_2_Face_Index], Dist_2_Terr_Edge_List[Dist_2_Face_Index]
+    return Dist_2_Terr_Face_List[Dist_2_Face_Index], Dist_2_Terr_Edge_List[Dist_2_Face_Index], Point_2_Terr_Normal_List[Dist_2_Face_Index]
 
 def Robot_Link_2_Terr_Dist(robot_link_point, terr_model_i):
 
@@ -54,7 +55,9 @@ def Robot_Link_2_Terr_Dist(robot_link_point, terr_model_i):
 
     Dist_2_Terr_Edge = Distance_2_Face_Edge(robot_link_point, Terr_Faces_i, Terr_Normal_i)
 
-    return Dist_2_Terr_Face, Dist_2_Terr_Edge
+    Point_2_Terr_Normal = Terr_Normal_i
+
+    return Dist_2_Terr_Face, Dist_2_Terr_Edge, Point_2_Terr_Normal
 
 def Distance_2_Face_Edge(robot_link_point, terr_face_vertices, terr_normal):
     # This function is used to calculate the signed distance of a given point to the edge of a triangle mesh

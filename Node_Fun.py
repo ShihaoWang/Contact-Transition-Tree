@@ -23,6 +23,7 @@ def TreeNode_Dict_Init(world, config_i, velocity_i, contact_link_dictionary, con
     6.Children TreeNodes        list of int
     7.Contact PosNVel info      list of dictionaries
     8.Contact Status info       list of dictionaries
+    9.Contact Normal info       list of dictionaries
     -------------------------------------------
     """
     state_i = List_Append_fn(config_i, velocity_i)

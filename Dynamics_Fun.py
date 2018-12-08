@@ -51,3 +51,9 @@ def Dynamics_To_Acc(sim_robot, DOF, robot_state, contact_force, control, contact
     D_q_Acc = Dynamics_RHS - CG_q_qdot
     Acc = np.matmul(np.linalg.pinv(D_q), D_q_Acc)
     return Acc
+
+def Contact_Force_2_Full_List(DOF, contact_force):
+    contact_force_list = [0] * DOF
+    for i in range(0, DOF - 6):
+        contact_force_list[6 + i] = contact_force[i]
+    return contact_force_list
