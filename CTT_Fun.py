@@ -58,12 +58,15 @@ def Nodes_Optimization_fn(world, treenode_parent, treenode_child, contact_link_d
 
     for Duration_i in Duration_list:
         # Inner operation
-        ipdb.set_trace()
+        # ipdb.set_trace()
         Nodes_Optimization_Inner_Opt(world, treenode_parent, treenode_child, contact_link_dictionary, terr_model, robot_option,  Duration_i, Grids_Number, Duration_min, Duration_max)
 
 def Nodes_Optimization_Inner_Opt(world, treenode_parent, treenode_child, contact_link_dictionary, terr_model, robot_option, duration, grids, duration_min, duration_max):
     # The inner optimization of this contact transition tree
     Seed_Guess_List, DOF, Control_Force_Len = Seed_Guess_Gene(world, treenode_parent, treenode_child, contact_link_dictionary, terr_model, robot_option, duration, grids)
+    # ipdb.set_trace()
+    Robot_Motion_Plot(world, DOF, Control_Force_Len, contact_link_dictionary, terr_model, robot_option, grids, Seed_Guess_List)
+
 
     # Nodes_Optimization_ObjNConstraint(world, treenode_parent, treenode_child, contact_link_dictionary, terr_model, robot_option, grids, DOF, Control_Force_Len, Seed_Guess_List)
 
@@ -82,13 +85,18 @@ def Nodes_Optimization_Inner_Opt(world, treenode_parent, treenode_child, contact
     """
             Control bounds
     """
-    tau_bound = world.robot(0).getTorqueLimits ()
+    tau_bound = world.robot(0).getTorqueLimits()
     for i in range(0, grids):
         for j in range(0, len(tau_bound) - 6):
             xlb.append(-tau_bound[j + 6]);                  xub.append(tau_bound[j + 6])
     """
             Contact Force bounds: not bounded
     """
+    force_bound = np.inf
+    for i in range(0, grids):
+        for j in range(0, Control_Force_Len):
+            xlb.append(-force_bound);                       xub.append(force_bound)
+    ipdb.set_trace()
 
     # Optimization problem setup
     Nodes_Optimization_Inner = Nodes_Optimization_Inner_Opt_Prob(world, treenode_parent, treenode_child, contact_link_dictionary, terr_model, robot_option, grids, DOF, Control_Force_Len, Seed_Guess_List)
@@ -108,6 +116,9 @@ def Nodes_Optimization_Inner_Opt(world, treenode_parent, treenode_child, contact
     slv = solver(Nodes_Optimization_Inner, cfg)
     # rst = slv.solveRand()
     rst = slv.solveGuess(np.array(Seed_Guess_List))
+
+    y_val, y_type = Nodes_Optimization_ObjNConstraint(world, treenode_parent, treenode_child, contact_link_dictionary, terr_model, robot_option, grids, DOF, Control_Force_Len, rst.sol)
+
 
     return rst
 
@@ -134,6 +145,7 @@ def Nodes_Optimization_ObjNConstraint(world, treenode_parent, treenode_child, co
     Parent_State = treenode_parent["State"];                    State_0 = State_List_Array[0]
     Initial_Match_Constraint = State_0 - Parent_State
     List_Obj_Update(Initial_Match_Constraint, 0, y_val, y_type)
+    # ipdb.set_trace()
 
     """
         Constraint 2:

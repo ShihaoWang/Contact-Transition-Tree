@@ -98,6 +98,7 @@ def Seed_Guess_Gene(world, treenode_parent, treenode_child, contact_link_diction
     # ListOfLists_Print(Control_List_Trans)
     # ipdb.set_trace()
     # Seed zip into a single list
+    # ipdb.set_trace()
     Seed_Guess_List = []
     Seed_Guess_List.append(duration)                # The first element is the time duration
     for i in range(0, grids):
@@ -108,6 +109,7 @@ def Seed_Guess_Gene(world, treenode_parent, treenode_child, contact_link_diction
 
     for i in range(0, grids):
         Seed_Guess_List = Seed_Guess_List + Contact_Force_List[i]
+    DOF = len(Goal_Config)
     return Seed_Guess_List, DOF, Contact_Force_List_Length
 
 def Parabolic_Para_All_Evaluation(parabolic_parameter_list, path_s_list, duration):

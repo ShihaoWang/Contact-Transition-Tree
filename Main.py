@@ -63,7 +63,6 @@ def main():
     global Contact_Link_Dictionary;
     Contact_Link_Dictionary = Contact_Link_Reader("Contact_Link.txt", Robot_Option)
     Contact_Status_Dictionary_Init = Contact_Status_Reader("Init_Contact.txt", Robot_Option)
-
     # According to the initial condition of the robot contact status, a basic optimization may have to be contacted to enforce the initial constraints.
     # ipdb.set_trace()
     # # # Now it is the validation of the feasibility of the given initial condition
@@ -90,6 +89,7 @@ def main():
 
 
     # Given the pre-optimized robot state, we could directly load em in
+
     robot_viewer = MyGLViewer(world, Config_Init, Velocity_Init)
     ipdb.set_trace()
 
@@ -109,6 +109,7 @@ def main():
     while vis.shown():
         time.sleep(0.1)
         robot_sim.updateWorld()
+
         sim_robot_controller.setMilestone(Config_Init, Velocity_Init)
 
 if __name__ == "__main__":

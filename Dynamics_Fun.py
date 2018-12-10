@@ -57,3 +57,13 @@ def Contact_Force_2_Full_List(DOF, contact_force):
     for i in range(0, DOF - 6):
         contact_force_list[6 + i] = contact_force[i]
     return contact_force_list
+
+def Robot_Total_Mass(world):
+    # This function is used to calculate the given robot's total mass
+    sim_robot = world.robot(0)
+    Total_Mass = 0.0
+    for i in range(0, sim_robot.numLinks()):
+        sim_robot_link_i_Mass_structure = sim_robot.link(i).getMass()
+        sim_robot_link_i_mass = sim_robot_link_i_Mass_structure.getMass()
+        Total_Mass = Total_Mass +  sim_robot_link_i_mass
+    return Total_Mass
