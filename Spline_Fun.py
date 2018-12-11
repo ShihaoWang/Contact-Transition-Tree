@@ -11,6 +11,7 @@ def State_Mid_from_CubicSpline(DOF, T, state_front, Acc_front, state_back, Acc_b
     Pos_front = state_front[0:DOF];     Vel_front = state_front[DOF:]
     Pos_back = state_back[0:DOF];       Vel_back = state_back[DOF:]
 
+
     State_mid = [0] * (2 * DOF);        Acc_mid = [0] * DOF
     # ipdb.set_trace()
 
@@ -21,7 +22,6 @@ def State_Mid_from_CubicSpline(DOF, T, state_front, Acc_front, state_back, Acc_b
         Pos_mid_i = CubicSpline_Evaluation_fn(0, T, Pos_front_i, Pos_back_i, Vel_front_i,  Vel_back_i, 0.5)
         Vel_mid_i = CubicSpline_Evaluation_fn(0, T, Vel_front_i, Vel_back_i, Acc_front_i,  Acc_back_i, 0.5)
         Acc_mid_i = CubicSpline_Evaluation_fn(1, T, Vel_front_i, Vel_back_i, Acc_front_i,  Acc_back_i, 0.5)
-
         State_mid[i] = Pos_mid_i;       State_mid[i + DOF] = Vel_mid_i
         Acc_mid[i] = Acc_mid_i
     return State_mid, Acc_mid

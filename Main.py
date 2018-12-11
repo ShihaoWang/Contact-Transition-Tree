@@ -71,21 +71,27 @@ def main():
     Config_Init, Velocity_Init = Robot_Init_Opt_fn(world, State_Init, Contact_Link_Dictionary, Contact_Status_Dictionary_Init, Terr_Model)
     # State_Writer_fn(Config_Init, Velocity_Init, "Opt_Init_Config.txt", "Opt_Init_Velocity.txt",Robot_Option)
 
-    # ipdb.set_trace()
-    ## Now it is the contact transition tree optimization
+    # Now it is the contact transition tree optimization
     # Root node initialization
     Root_Node = TreeNode_Dict_Init(world, Config_Init, Velocity_Init, Contact_Link_Dictionary, Contact_Status_Dictionary_Init, All_TreeNodes)
     Frontier_Add(Frontier_Nodes, Root_Node)
     # Seed_Conf_Optimization_ObjNConstraint(world, Root_Node, Root_Node, Contact_Link_Dictionary, Terr_Model, State_Init)
     # Seed_Guess_Gene(world, Root_Node, Root_Node, Contact_Link_Dictionary, Terr_Model, Robot_Option, 1.0, 8)
     while len(Frontier_Nodes)>0:
-        pass
-
+        Current_Node = Frontier_Pop(Frontier_Nodes)
         """"
         * For the current node, first is the Node_Self_Opt to optimize a motion while maintain the current mode
         * if this does not work, then expand the current node into the adjacent nodes then do the Nodes_Connectivity_Opt
         """
-        Nodes_Optimization_fn(world, Root_Node, Root_Node, Contact_Link_Dictionary, Terr_Model, Robot_Option)
+        Opt_Soln, Opt_Flag = Nodes_Optimization_fn(world, Current_Node, Current_Node, Contact_Link_Dictionary, Terr_Model, Robot_Option)
+
+        if Opt_Soln == True:
+            # Here this means that the robot has already achieved a stabilized state with inertia shaping
+            Current_Node["IS"] = Opt_Soln
+        else:
+            # This means the node expansion has to be conducted to enable the stabilization with the modification of robot contacts
+
+
 
 
     # Given the pre-optimized robot state, we could directly load em in

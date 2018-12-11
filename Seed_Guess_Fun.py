@@ -68,6 +68,8 @@ def Seed_Guess_Gene(world, treenode_parent, treenode_child, contact_link_diction
     path_s_array = np.linspace(0.0, 1.0, num=grids);    path_s_list = path_s_array.tolist()
     Pos_List, Vel_List, Acc_List = Parabolic_Para_All_Evaluation(DOF_Parabolic_Parameter_List, path_s_array, duration)
 
+    # Here Pos_List, Vel_List, Acc_List are row elements where each row stands for the robot state at a certain time
+
     """
     Initialization of the control and contact force with a pseudo inverse method
     """
@@ -78,10 +80,8 @@ def Seed_Guess_Gene(world, treenode_parent, treenode_child, contact_link_diction
         Pos_i = Pos_List[i];        Vel_i = Vel_List[i];        Acc_i = Acc_List[i]
         # To get the system dynamics equation, please update the robot state at each iteration
         State_i = Pos_i + Vel_i
-
         Robot_State_Update(sim_robot, State_i)
         D_q_i, CG_q_qdot_i, Jac_Full_i, Jac_Full_Trans_i = Dynamics_Matrices(sim_robot, contact_link_dictionary)
-
         Dynamics_LHS_i = List_Sum_fn(List_Mat_Multi_List_Vec_fn(D_q_i, Acc_i),CG_q_qdot_i)
         Dynamics_RHS_Matrix_i = Dynamics_RHS_Matrix_fn(Robot_DOF, Jac_Full_Trans_i)
         Dynamics_RHS_Inverse_Matrix_i = np.linalg.pinv(Dynamics_RHS_Matrix_i)
@@ -98,7 +98,7 @@ def Seed_Guess_Gene(world, treenode_parent, treenode_child, contact_link_diction
     # ListOfLists_Print(Control_List_Trans)
     # ipdb.set_trace()
     # Seed zip into a single list
-    # ipdb.set_trace()
+
     Seed_Guess_List = []
     Seed_Guess_List.append(duration)                # The first element is the time duration
     for i in range(0, grids):
@@ -113,14 +113,12 @@ def Seed_Guess_Gene(world, treenode_parent, treenode_child, contact_link_diction
     return Seed_Guess_List, DOF, Contact_Force_List_Length
 
 def Parabolic_Para_All_Evaluation(parabolic_parameter_list, path_s_list, duration):
-
     Pos_List = [];          Vel_List = [];              Acc_List = []
     for parabolic_parameter_list_i in parabolic_parameter_list:
         Pos_List_i, Vel_List_i, Acc_List_i = Parabolic_Para_Evaluation(parabolic_parameter_list_i, path_s_list, duration)
         Pos_List.append(Pos_List_i)
         Vel_List.append(Vel_List_i)
         Acc_List.append(Acc_List_i)
-
     Pos_List_New = map(list, zip(*Pos_List))
     Vel_List_New = map(list, zip(*Vel_List))
     Acc_List_New = map(list, zip(*Acc_List))
@@ -138,7 +136,7 @@ def Parabolic_Para_Evaluation(parabolic_parameter_list_i, path_s_list, duration)
     for i in range(0, len(path_s_list)):
         s_i = path_s_list[i]
         Pos_i = a_i * s_i * s_i + b_i * s_i + c_i
-        Vel_i = (2 * a_i * s_i * s_i + b_i)/duration
+        Vel_i = (2 * a_i * s_i + b_i)/duration
         Acc_i = (2 * a_i)/(duration * duration)
 
         Pos_list.append(Pos_i)

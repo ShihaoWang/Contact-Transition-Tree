@@ -358,8 +358,9 @@ def Contact_Link_i_PosNVel(sim_robot, link_index, link_local_extremities):
         Contact_Link_PosNVel_i["Vel"].append(link_local_extremity_i_Vel)
     return Contact_Link_PosNVel_i
 
-def List_Obj_Update(list_value, constraint_type, y_val, y_type):
+def List_Obj_Update(list_value_obj, constraint_type, y_val, y_type):
     # This function is used to update the list according to the function value
+    list_value = list_value_obj[:]
     for i in range(0, len(list_value)):
         y_val.append(list_value[i])
         y_type.append(constraint_type)
@@ -383,3 +384,12 @@ def Constraint_Bounds(y_type):
             lb.append(0)
             ub.append(0)
     return lb, ub
+
+def Optimal_Solution_Validation(y_val, y_type):
+    # This function is used to validate whether the solution comes out from the optimizer is "good" or not
+    # This comparison is conducted with the comparasion of the equality constraint
+    constraint_vio = 0.0
+    for i in range(0, len(y_val)):
+        if y_type[i] == 0:
+            constraint_vio = constraint_vio + abs(y_val[i])
+    return constraint_vio

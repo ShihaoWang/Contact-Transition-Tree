@@ -35,7 +35,7 @@ class Nodes_Optimization_Inner_Opt_Prob(probFun):
 
     def __callf__(self, x, y):
         # This function is the main function to calculate the objective and constraint function value
-        y_val, y_type = Nodes_Optimization_ObjNConstraint(self.world, self.treenode_parent, self.treenode_child, self.contact_link_dictionary, self.terr_model, self.robot_option, self.grids, self.DOF, self.control_force_len, self.seed_guess_list)
+        y_val, y_type = Nodes_Optimization_ObjNConstraint(self.world, self.treenode_parent, self.treenode_child, self.contact_link_dictionary, self.terr_model, self.robot_option, self.grids, self.DOF, self.control_force_len, x)
         for i in range(0,len(y_val)):
             y[i] = y_val[i]
 
@@ -55,18 +55,19 @@ def Nodes_Optimization_fn(world, treenode_parent, treenode_child, contact_link_d
     Duration_list = Duration_array.tolist()
 
     Grids_Number = 8
-
+    Opt_Flag = False
     for Duration_i in Duration_list:
         # Inner operation
-        # ipdb.set_trace()
-        Nodes_Optimization_Inner_Opt(world, treenode_parent, treenode_child, contact_link_dictionary, terr_model, robot_option,  Duration_i, Grids_Number, Duration_min, Duration_max)
+        Opt_Soln, Opt_Flag = Nodes_Optimization_Inner_Opt(world, treenode_parent, treenode_child, contact_link_dictionary, terr_model, robot_option,  Duration_i, Grids_Number, Duration_min, Duration_max)
+        if Opt_Flag == True:
+            return Opt_Soln, Opt_Flag
+    return Opt_Soln, Opt_Flag
 
 def Nodes_Optimization_Inner_Opt(world, treenode_parent, treenode_child, contact_link_dictionary, terr_model, robot_option, duration, grids, duration_min, duration_max):
     # The inner optimization of this contact transition tree
     Seed_Guess_List, DOF, Control_Force_Len = Seed_Guess_Gene(world, treenode_parent, treenode_child, contact_link_dictionary, terr_model, robot_option, duration, grids)
     # ipdb.set_trace()
-    Robot_Motion_Plot(world, DOF, Control_Force_Len, contact_link_dictionary, terr_model, robot_option, grids, Seed_Guess_List)
-
+    # Robot_Motion_Plot(world, DOF, Control_Force_Len, contact_link_dictionary, terr_model, robot_option, grids, Seed_Guess_List)
 
     # Nodes_Optimization_ObjNConstraint(world, treenode_parent, treenode_child, contact_link_dictionary, terr_model, robot_option, grids, DOF, Control_Force_Len, Seed_Guess_List)
 
@@ -96,7 +97,6 @@ def Nodes_Optimization_Inner_Opt(world, treenode_parent, treenode_child, contact
     for i in range(0, grids):
         for j in range(0, Control_Force_Len):
             xlb.append(-force_bound);                       xub.append(force_bound)
-    ipdb.set_trace()
 
     # Optimization problem setup
     Nodes_Optimization_Inner = Nodes_Optimization_Inner_Opt_Prob(world, treenode_parent, treenode_child, contact_link_dictionary, terr_model, robot_option, grids, DOF, Control_Force_Len, Seed_Guess_List)
@@ -104,6 +104,7 @@ def Nodes_Optimization_Inner_Opt(world, treenode_parent, treenode_child, contact
 
     # This self structure is different from the previous self structure defined in the optimization problem
     y_val, y_type = Nodes_Optimization_ObjNConstraint(world, treenode_parent, treenode_child, contact_link_dictionary, terr_model, robot_option, grids, DOF, Control_Force_Len, Seed_Guess_List)
+
     lb, ub = Constraint_Bounds(y_type)
     Nodes_Optimization_Inner.lb = lb;                       Nodes_Optimization_Inner.ub = ub
     cfg = snoptConfig()
@@ -119,8 +120,14 @@ def Nodes_Optimization_Inner_Opt(world, treenode_parent, treenode_child, contact
 
     y_val, y_type = Nodes_Optimization_ObjNConstraint(world, treenode_parent, treenode_child, contact_link_dictionary, terr_model, robot_option, grids, DOF, Control_Force_Len, rst.sol)
 
+    constraint_vio = Optimal_Solution_Validation(y_val, y_type)
 
-    return rst
+    if constraint_vio<= 0.1:
+        # Here 0.1 is threshold for constraint validity
+        sol_valid_flag = True
+    else:
+        sol_valid_flag = False
+    return rst.sol, sol_valid_flag
 
 def Nodes_Optimization_ObjNConstraint(world, treenode_parent, treenode_child, contact_link_dictionary, terr_model, robot_option, grids, DOF, control_force_len, seed_guess_list):
     # This is the core optimization function of this contact transition tree project
@@ -164,7 +171,7 @@ def Nodes_Optimization_ObjNConstraint(world, treenode_parent, treenode_child, co
         Robot_State_Update(sim_robot, State_Front)
         D_q_Front, CG_q_qdot_Front, Jac_Full_Front, Jac_Full_Trans_Front = Dynamics_Matrices(sim_robot, contact_link_dictionary)
         Control_Front = Control_List_Array[i]
-        Contact_Force_Front = Control_List_Array[i]
+        Contact_Force_Front = Contact_Force_List_Array[i]
         Acc_Front = Dynamics_To_Acc(sim_robot, DOF, State_Front, Contact_Force_Front, Control_Front, contact_link_dictionary)
 
         # Robot state dynamics at the back side
@@ -172,18 +179,18 @@ def Nodes_Optimization_ObjNConstraint(world, treenode_parent, treenode_child, co
         Robot_State_Update(sim_robot, State_Back)
         D_q_Back, CG_q_qdot_Back, Jac_Full_Back, Jac_Full_Trans_Back = Dynamics_Matrices(sim_robot, contact_link_dictionary)
         Control_Back = Control_List_Array[i + 1]
-        Contact_Force_Back = Control_List_Array[i + 1]
+        Contact_Force_Back = Contact_Force_List_Array[i + 1]
         Acc_Back = Dynamics_To_Acc(sim_robot, DOF, State_Back, Contact_Force_Back, Control_Back, contact_link_dictionary)
-        # ipdb.set_trace()
+
         # Collocation point
         State_Mid, Acc_Mid = State_Mid_from_CubicSpline(DOF, T, State_Front, Acc_Front, State_Back, Acc_Back)
         Robot_State_Update(sim_robot, State_Mid)
         D_q_Mid, CG_q_qdot_Mid, Jac_Full_Mid, Jac_Full_Trans_Mid = Dynamics_Matrices(sim_robot, contact_link_dictionary)
-        Control_Mid_Act = 0.5 * Control_Front + 0.5 * Control_Back;         Control_Mid = Contact_Force_2_Full_List(DOF, Control_Mid_Act)
         Contact_Force_Mid = 0.5 * Contact_Force_Front + 0.5 * Contact_Force_Back
+        Control_Mid_Part = 0.5 * Control_Front + 0.5 * Control_Back;         Control_Mid = Control_2_Full_List(DOF, Control_Mid_Part)
 
         Dynamics_LHS_i = List_Sum_fn(List_Mat_Multi_List_Vec_fn(D_q_Mid, Acc_Mid),CG_q_qdot_Mid)
-        Dynamics_RHS_i = List_Sum_fn(np.matmul(Jac_Full_Trans_Mid, Contact_Force_Mid),CG_q_qdot_Mid)
+        Dynamics_RHS_i = List_Sum_fn(np.matmul(Jac_Full_Trans_Mid, Contact_Force_Mid),Control_Mid)
         Dynamics_Constraint_i = List_Minus_fn(Dynamics_LHS_i, Dynamics_RHS_i)
         List_Obj_Update(Dynamics_Constraint_i, 0, y_val, y_type)
 
@@ -197,10 +204,12 @@ def Nodes_Optimization_ObjNConstraint(world, treenode_parent, treenode_child, co
                     The previous unchanged active contact constraint have to be satisfied
     """
                                    # list of dictionaries according to contact_link_list
-    Ref_Contact_PosNVel = treenode_parent["Contact_PosNVel"]
+
+    Ref_Contact_PosNVel = treenode_parent["Contact_PosNVel"][:]
     for i in range(0, grids):
         # Robot state dynamics at the each grid i
-        At_i_State = State_List_Array[i];
+        At_i_State = State_List_Array[i]
+        # print At_i_State
         Robot_State_Update(sim_robot, At_i_State)
         At_i_Contact_Link_PosNVel = Contact_Link_PosNVel(sim_robot, contact_link_dictionary, -1)
         for j in range(0, len(contact_link_itc_dict)):
@@ -210,7 +219,6 @@ def Nodes_Optimization_ObjNConstraint(world, treenode_parent, treenode_child, co
             for k in contact_link_itc_dict[contact_link_i_number]:
                 # This is the order of Ref_Contact_PosNVel/RefContact_PosNVel list
                 # If not empty, there exists active pos/vel
-                # ipdb.set_trace()
 
                 At_i_Ref_Link_j_Pos_k = Ref_Contact_PosNVel[j]["Pos"][k]
                 At_i_Ref_Link_j_Vel_k = Ref_Contact_PosNVel[j]["Vel"][k]
@@ -223,6 +231,7 @@ def Nodes_Optimization_ObjNConstraint(world, treenode_parent, treenode_child, co
 
                 List_Obj_Update(At_i_Ref_Opt_Link_j_Pos_k_Constraint, 0, y_val, y_type)
                 List_Obj_Update(At_i_Ref_Opt_Link_j_Vel_k_Constraint, 0, y_val, y_type)
+
     """
         Constraint 4:
                     Terminal contact addition if there exists
@@ -246,8 +255,9 @@ def Nodes_Optimization_ObjNConstraint(world, treenode_parent, treenode_child, co
                                    1. The net force should lie within the friction cone.
                                    2. The inactive contact points should not have nonzero forces there.
     """
-    Transien_Contact_Status = treenode_parent["Contact_Status"]
-    Terminal_Contact_Status = treenode_child["Contact_Status"]
+    Transien_Contact_Status = treenode_parent["Contact_Status"].copy()
+    Terminal_Contact_Status = treenode_child["Contact_Status"].copy()
+
     # ipdb.set_trace()
     for i in range(0, grids):
         At_i_Contact_Force = Contact_Force_List_Array[i]            # This contact force corresponds to the contat point Jacobian matrix
@@ -257,7 +267,6 @@ def Nodes_Optimization_ObjNConstraint(world, treenode_parent, treenode_child, co
             Contact_Force_Constraint(At_i_Contact_Force, contact_link_list, Transien_Contact_Status, terr_model, y_val, y_type)
         else:
             Contact_Force_Constraint(At_i_Contact_Force, contact_link_list, Terminal_Contact_Status, terr_model, y_val, y_type)
-
     """
         Constraint 6:
                     Kinetic energy threshold constraint

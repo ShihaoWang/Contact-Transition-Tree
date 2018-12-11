@@ -65,8 +65,11 @@ def Robot_Motion_Plot(world, DOF, control_force_len, contact_link_dictionary, te
     # Here it is to unpack the robot optimized solution into a certain sets of the lists
     Duration, State_List_Array, Control_List_Array, Contact_Force_List_Array = Seed_Guess_Unzip(optimized_solution, DOF, control_force_len, grids)
 
+    # Data interpolation
     interpolated_times = 5
     Inter_Time_Array, Inter_State_Array = Trajectory_Interpolation(Duration, grids, State_List_Array, interpolated_times)
+    Inter_Time_Array, Inter_Contact_Force_Array = Trajectory_Interpolation(Duration, grids, Contact_Force_List_Array, interpolated_times)
+
     vis.pushPlugin(robot_viewer)
     vis.add("world", world)
     vis.show()
@@ -79,38 +82,36 @@ def Robot_Motion_Plot(world, DOF, control_force_len, contact_link_dictionary, te
     robot_mass = Robot_Total_Mass(world)
     robot_gravity = robot_mass * 9.81
 
-    force_unit_length = 1
+    force_unit_length = 0.5
     while vis.shown():
         # This is the main plot program
-        # ipdb.set_trace()
 
         for i in range(0, grids * interpolated_times):
             vis.lock()
-
             Robotstate_Traj_i = Inter_State_Array[i];
             RobotConfig_Traj_i = Robotstate_Traj_i[0:DOF]
-            # print Robotstate_Traj_i
             sim_robot.setConfig(RobotConfig_Traj_i)
             # Now it is the plot of the contact force at the contact extremities
-            # Contact_Force_Traj_i = Contact_Force_List_Array[i]
-            # # Here Contact_Link_PosNVel_List is a list of dictionaries and the list is
-            # Contact_Link_PosNVel_List = Contact_Link_PosNVel(sim_robot, contact_link_dictionary, -1)
-            # for i in range(0, len(contact_link_list)):
-            #     Contact_Force_Index = 0
-            #     Contact_Link_i_PosNVel = Contact_Link_PosNVel_List[i]
-            #     Contact_Link_i_Pos_List = Contact_Link_i_PosNVel["Pos"]
-            #     for j in range(0, len(Contact_Link_i_Pos_List)):
-            #         Contact_Link_i_Pos_j = Contact_Link_i_Pos_List[j]
-            #         Contact_Link_i_Pos_j_Contact_Force = Contact_Force_Element_from_Index(Contact_Force_Traj_i, Contact_Force_Index)
-            #         contact_start_pos, contact_terminal_pos = Contact_Force_Mag_2_Vec(Contact_Link_i_Pos_j, Contact_Link_i_Pos_j_Contact_Force, robot_gravity, force_unit_length)
-            #         vis.add(" ", Trajectory([0, 1], [contact_start_pos, contact_terminal_pos]))
-            #         Contact_Force_Index = Contact_Force_Index + 1
+            Contact_Force_Traj_i = Inter_Contact_Force_Array[i]
+            # Here Contact_Link_PosNVel_List is a list of dictionaries and the list is
+            Contact_Link_PosNVel_List = Contact_Link_PosNVel(sim_robot, contact_link_dictionary, -1)
+            Contact_Force_Index = 0
+            for i in range(0, len(contact_link_list)):
+                Contact_Link_i_PosNVel = Contact_Link_PosNVel_List[i]
+                Contact_Link_i_Pos_List = Contact_Link_i_PosNVel["Pos"]
+                for j in range(0, len(Contact_Link_i_Pos_List)):
+                    Contact_Link_i_Pos_j = Contact_Link_i_Pos_List[j]
+                    Contact_Link_i_Pos_j_Contact_Force = Contact_Force_Element_from_Index(Contact_Force_Traj_i, Contact_Force_Index)
+                    contact_start_pos, contact_terminal_pos = Contact_Force_Mag_2_Vec(Contact_Link_i_Pos_j, Contact_Link_i_Pos_j_Contact_Force, robot_gravity, force_unit_length)
+                    force_string_name =" " *  Contact_Force_Index
+                    vis.add(force_string_name, Trajectory([0, 1], [contact_start_pos, contact_terminal_pos]))
+                    Contact_Force_Index = Contact_Force_Index + 1
             # COMPos_start = sim_robot.getCom()
             # COMPos_end = COMPos_start
             # COMPos_end[2] = COMPos_end[2] + 100
-        # vis.add("Center of Mass",  Trajectory([0, 1], [COMPos_start, COMPos_end]))
+            # vis.add("Center of Mass",  Trajectory([0, 1], [COMPos_start, COMPos_end]))
             vis.unlock()
-            time.sleep(0.1)
+            time.sleep(interpolated_times * (Inter_Time_Array[1] - Inter_Time_Array[0]))
 
 def Contact_Force_Mag_2_Vec(contact_start_pos, contact_force, robot_gravity, force_unit_length):
     # This function is used to calculate the vector of certain contact from the link contact

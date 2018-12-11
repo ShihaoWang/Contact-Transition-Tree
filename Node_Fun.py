@@ -24,6 +24,7 @@ def TreeNode_Dict_Init(world, config_i, velocity_i, contact_link_dictionary, con
     7.Contact PosNVel info      list of dictionaries
     8.Contact Status info       list of dictionaries
     9.Contact Normal info       list of dictionaries
+    10. Inertial Shaping(IS)    a list of optimized solution
     -------------------------------------------
     """
     state_i = List_Append_fn(config_i, velocity_i)
@@ -40,6 +41,7 @@ def TreeNode_Dict_Init(world, config_i, velocity_i, contact_link_dictionary, con
     TreeNode["Children"] = []
     TreeNode["Contact_PosNVel"] = Contact_Link_PosNVel(world.robot(0), contact_link_dictionary, -1)
     TreeNode["Contact_Status"] = contact_Status_Dictionary_i
+    TreeNode["IS"] = []
 
     all_treenode.append(TreeNode)
 
@@ -125,3 +127,12 @@ def TreeNode_Status_CMP(treenode_parent, treenode_child):
                     contact_status_cmp_dict[contact_link_list[i]].append(j)
 
     return contact_status, contact_status_cmp_dict, contact_status_itc_dict
+
+def Node_Expansion_fn(treenode_parent, contact_link_list):
+    """
+        This function is used to conduct the node expansion for a given parent node
+        The basic consideration is not to have the flying-in-air phase
+    """
+
+    parent_contact_status = treenode_parent["Contact_Status"]       # Here parent_contact_status is a dictionary
+    

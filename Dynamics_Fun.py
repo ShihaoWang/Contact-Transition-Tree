@@ -15,6 +15,7 @@ def Dynamics_Matrices(robot, contact_link_dictionary):
     D_q = robot.getMassMatrix()                             # List of list
     C_q_qdot = robot.getCoriolisForces()                    # List
     G_q = robot.getGravityForces([0,0,-9.8])                # List
+    # ipdb.set_trace()
     CG_q_qdot = List_Sum_fn(C_q_qdot, G_q)
     Jac_Full = []
     for contact_link_index_i in contact_link_dictionary.keys():
@@ -52,11 +53,11 @@ def Dynamics_To_Acc(sim_robot, DOF, robot_state, contact_force, control, contact
     Acc = np.matmul(np.linalg.pinv(D_q), D_q_Acc)
     return Acc
 
-def Contact_Force_2_Full_List(DOF, contact_force):
-    contact_force_list = [0] * DOF
+def Control_2_Full_List(DOF, control_i):
+    control_list = [0] * DOF
     for i in range(0, DOF - 6):
-        contact_force_list[6 + i] = contact_force[i]
-    return contact_force_list
+        control_list[6 + i] = control_i[i]
+    return control_list
 
 def Robot_Total_Mass(world):
     # This function is used to calculate the given robot's total mass

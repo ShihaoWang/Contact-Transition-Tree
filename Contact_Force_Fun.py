@@ -18,6 +18,7 @@ mu = 0.35
 def Contact_Force_Constraint(contact_force, contact_link_list, contact_link_status, terr_model, y_val, y_type):
     # This function is used to take care of the contact force constraint given the contact force, contact link list and contact link status
     # The order of contact force is arranged according to the contact link list
+
     contact_force_index = 0
     for i in range(0, len(contact_link_list)):
         # This is the main force categories
@@ -39,7 +40,8 @@ def Contact_Force_Constraint(contact_force, contact_link_list, contact_link_stat
                 # Friction cone constraint
                 contact_force_of_link_i_at_point_j_SoS = Dot_Product(contact_force_of_link_i_at_point_j, contact_force_of_link_i_at_point_j)
                 contact_force_of_link_i_at_point_j_tang_sq = contact_force_of_link_i_at_point_j_SoS - contact_force_of_link_i_at_point_j_normal * contact_force_of_link_i_at_point_j_normal
-                y_val.append(mu * mu * contact_force_of_link_i_at_point_j_normal * contact_force_of_link_i_at_point_j_normal - contact_force_of_link_i_at_point_j_tang_sq)
+                contact_force_of_link_i_at_point_j_friction_constraint = mu * mu * contact_force_of_link_i_at_point_j_normal * contact_force_of_link_i_at_point_j_normal - contact_force_of_link_i_at_point_j_tang_sq
+                y_val.append(contact_force_of_link_i_at_point_j_friction_constraint)
                 y_type.append(1)
             else:
                 # This means that the constraint force is notactive so should be zero
