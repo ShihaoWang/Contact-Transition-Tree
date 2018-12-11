@@ -1,4 +1,4 @@
-import sys, os
+import sys, os, copy
 import numpy as np
 import math, ipdb
 import ipdb
@@ -25,6 +25,7 @@ def TreeNode_Dict_Init(world, config_i, velocity_i, contact_link_dictionary, con
     8.Contact Status info       list of dictionaries
     9.Contact Normal info       list of dictionaries
     10. Inertial Shaping(IS)    a list of optimized solution
+    11. Parent to Child traj    a list of optimized solution
     -------------------------------------------
     """
     state_i = List_Append_fn(config_i, velocity_i)
@@ -42,8 +43,26 @@ def TreeNode_Dict_Init(world, config_i, velocity_i, contact_link_dictionary, con
     TreeNode["Contact_PosNVel"] = Contact_Link_PosNVel(world.robot(0), contact_link_dictionary, -1)
     TreeNode["Contact_Status"] = contact_Status_Dictionary_i
     TreeNode["IS"] = []
+    TreeNode["P2C"] = []
 
     all_treenode.append(TreeNode)
+
+    return TreeNode
+
+def TreeNode_Dict_Init_CS(contact_Status_Dictionary_i):
+    # This function is used to initialze a treenode especially child node with only the information of the contact status
+    TreeNode = dict()
+    TreeNode["Index"] = -1
+    TreeNode["Config"] = []
+    TreeNode["Velocity"] = []
+    TreeNode["State"] = []
+    TreeNode["KE"] = 0
+    TreeNode["Parent"] = -1
+    TreeNode["Children"] = []
+    TreeNode["Contact_PosNVel"] = {}
+    TreeNode["Contact_Status"] = contact_Status_Dictionary_i
+    TreeNode["IS"] = []
+    TreeNode["P2C"] = []
 
     return TreeNode
 
@@ -133,6 +152,82 @@ def Node_Expansion_fn(treenode_parent, contact_link_list):
         This function is used to conduct the node expansion for a given parent node
         The basic consideration is not to have the flying-in-air phase
     """
+    parent_contact_status = treenode_parent["Contact_Status"].copy()       # Here parent_contact_status is a dictionary
+    Children_nodes_contact_status_list = []
+    for i in range(0, len(contact_link_list)):
+        parent_contact_link_i_status = parent_contact_status[contact_link_list[i]]
+        if len(parent_contact_link_i_status) == 1:
+            # This means that this link has a point contact, the rule is to revert its value
+            child_node_i_contact_status = copy.deepcopy(parent_contact_status)
+            child_node_i_contact_status[contact_link_list[i]][0] = int(not(parent_contact_link_i_status[0]))
+            Children_nodes_contact_status_list.append(child_node_i_contact_status)
+        else:
+            """
+                This means that there is at least an edge contact possibility in this contact link
+                Three possibilities:
+                                    1. No contact:              ======>         Face contact or Edge contact
+                                    2. Edge contact:            ======>         No contact or Face contact
+                                    3. Face contact:            ======>         Edge contact or No contact
+            """
+            vertices_number = len(parent_contact_link_i_status)
+            child_node_i_contact_status_sum = sum(parent_contact_link_i_status)
+            if child_node_i_contact_status_sum == 0:
+                # Then this is the No contact status, we should add the Edge contact or the Face contact case.
+                # ADD Face contact
+                child_node_i_contact_status = copy.deepcopy(parent_contact_status)
+                child_node_i_contact_status[contact_link_list[i]] = [1] * vertices_number
+                Children_nodes_contact_status_list.append(child_node_i_contact_status)
 
-    parent_contact_status = treenode_parent["Contact_Status"]       # Here parent_contact_status is a dictionary
-    
+                # ADD Edge contact
+                for j in range(0, vertices_number):
+                    child_node_i_contact_status = copy.deepcopy(parent_contact_status)
+                    child_node_i_contact_status[contact_link_list[i]] = Edge_Node_from_Face_Add(j, vertices_number)
+                    Children_nodes_contact_status_list.append(child_node_i_contact_status)
+            else:
+                if child_node_i_contact_status_sum == vertices_number:
+                    # This is the Face contact case, we should add the Edge contact or No contact case.
+
+                    # ADD No contact
+                    child_node_i_contact_status = copy.deepcopy(parent_contact_status)
+                    child_node_i_contact_status[contact_link_list[i]] = [0] * vertices_number
+                    Children_nodes_contact_status_list.append(child_node_i_contact_status)
+
+                    # Add Edge contact
+                    for j in range(0, vertices_number):
+                        child_node_i_contact_status = copy.deepcopy(parent_contact_status)
+                        child_node_i_contact_status[contact_link_list[i]] = Edge_Node_from_Face_Minus(j, vertices_number)
+                        Children_nodes_contact_status_list.append(child_node_i_contact_status)
+                else:
+                    # This is the Edge contact case, we should add the Face contact or No contact case.
+
+                    # Add Face contact
+                    child_node_i_contact_status = copy.deepcopy(parent_contact_status)
+                    child_node_i_contact_status[contact_link_list[i]] = [1] * vertices_number
+                    Children_nodes_contact_status_list.append(child_node_i_contact_status)
+
+                    # Add No contact
+                    child_node_i_contact_status = copy.deepcopy(parent_contact_status)
+                    child_node_i_contact_status[contact_link_list[i]] = [0] * vertices_number
+                    Children_nodes_contact_status_list.append(child_node_i_contact_status)
+
+    return Children_nodes_contact_status_list
+
+def Edge_Node_from_Face_Add(edge_index, vertices_number):
+    # This function is used to generate the edge contact status from a given face vertices number
+    edge_contact = [0] * vertices_number
+    edge_contact[edge_index] = 1
+    if edge_index == vertices_number-1:
+        edge_contact[0] = 1
+    else:
+        edge_contact[edge_index + 1] = 1
+    return edge_contact
+
+def Edge_Node_from_Face_Minus(edge_index, vertices_number):
+    # This function is used to generate the edge contact status from a given face vertices number
+    edge_contact = [1] * vertices_number
+    edge_contact[edge_index] = 0
+    if edge_index == vertices_number-1:
+        edge_contact[0] = 0
+    else:
+        edge_contact[edge_index + 1] = 0
+    return edge_contact

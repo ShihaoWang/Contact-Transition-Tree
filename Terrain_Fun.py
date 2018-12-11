@@ -1,4 +1,4 @@
-import sys, os
+import sys, os, copy
 import numpy as np
 import math, ipdb
 import ipdb
@@ -148,7 +148,8 @@ def Terr_List_Analysis(terr_i):
                 terr_model_i["normals"].append(terr_model_normal_i)
 
         # However, due to the existence of the redundant faces (2 triangle faces are 1 square face), a simplification is conducted to reduce the size of faces and normals
-        terr_model_i_ref = terr_model_i.copy()          # Only the value
+        # terr_model_i_ref = terr_model_i.copy()          # Only the value
+        terr_model_i_ref = copy.deepcopy(terr_model_i)
         list_index_abs = ListofList_Categorization(terr_model_i_ref["normals"])
         # Then the next job is to construct the new terrain with these information
         terr_model_i = Faces_Unification(list_index_abs, terr_model_i)

@@ -68,3 +68,55 @@ def Robot_Total_Mass(world):
         sim_robot_link_i_mass = sim_robot_link_i_Mass_structure.getMass()
         Total_Mass = Total_Mass +  sim_robot_link_i_mass
     return Total_Mass
+
+def Impact_Mapping_fn(world, final_state, treenode_child, contact_link_dictionary):
+    """
+        This function is used to calculate the robot state after the impact mapping.
+        The two assumptions:
+                            1. The collision is infinitesimal.
+                            2. The collsiion is inelastic.
+    """
+    sim_robot = world.robot(0)
+    Robot_State_Update(sim_robot, final_state)
+    D_q, CG_q_qdot, Jac_Full, Jac_Full_Trans = Dynamics_Matrices(sim_robot, contact_link_dictionary)
+    DOF = len(D_q)
+    q_old = final_state[0:DOF];    qdot_old = final_state[DOF:]
+    Jac_Act_Array, Jac_Act_Trans_Array = Jac_Act_Selection(Jac_Full, contact_link_dictionary, treenode_child["Contact_Status"])
+    ipdb.set_trace()
+    J_D_inv_J_Trans = np.matmul(np.matmul(Jac_Act_Array, np.linalg.inv(D_q)), Jac_Act_Trans_Array)
+    J_qdot_old = np.matmul(Jac_Act_Array, qdot_old)
+    Negative_Impulse = np.matmul(np.linalg.pinv(J_D_inv_J_Trans), J_qdot_old)
+    Impulse = np.dot(Negative_Impulse,-1)
+    qdot_offset = np.matmul(np.matmul(np.linalg.inv(D_q), Jac_Act_Trans_Array), Impulse)
+    qdot_new = qdot_old[:]
+    for i in range(0, len(qdot_new)):
+        qdot_new[i] = qdot_new[i] + qdot_offset[i]
+    return q_old, qdot_new
+
+
+def Jac_Act_Selection(jac_full_matrix_raw, contact_link_dictionary, contact_status_dictionary):
+    # This function is used to select the active Jacobian matrix given the contact status
+    # The sequence order of the jac_full_matrix is arranged accoridng to contact_link_dictionary.keys()
+
+    Jac_Act_List = []
+    contact_link_list = contact_link_dictionary.keys()
+    jacobian_matrix_index = 0
+    Jac_Act_Index_List = []
+    for i in range(0, len(contact_link_list)):
+        link_i_contact_status = contact_status_dictionary[contact_link_list[i]]
+        for j in range(0, len(link_i_contact_status)):
+            link_i_point_j_contact_status = link_i_contact_status[j]
+            if link_i_point_j_contact_status == 1:
+                Jac_Act_Index_List.append(jacobian_matrix_index)
+            jacobian_matrix_index = jacobian_matrix_index + 1
+
+    jac_full_matrix = jac_full_matrix_raw[:]
+    # Based on the Jac_Act_Index_List, certain rows of jac_full_matrix have to be added.
+    for i in Jac_Act_Index_List:
+        Jac_Act_Start_Index = 3 * i
+        Jac_Act_Final_Index = Jac_Act_Start_Index + 3
+        for j in range(Jac_Act_Start_Index, Jac_Act_Final_Index):
+            Jac_Act_List.append(jac_full_matrix[j])
+    Jac_Act_Array = np.array(Jac_Act_List)
+    Jac_Act_Trans_Array = a = copy.deepcopy(Jac_Act_Array.T)
+    return Jac_Act_Array, Jac_Act_Trans_Array

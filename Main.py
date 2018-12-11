@@ -33,10 +33,8 @@ def main():
 
     # This funciton is used for the multi-contact humanoid push recovery
     # The default robot to be loaded is the HRP2 robot in this same folder
-    global Robot_Option;
     Robot_Option = "./User_File/HRP2_Robot/"
     # Robot_Option = "./User_File/JQ_Robot/"
-    # ipdb.set_trace()
 
     print "This funciton is used for the 3-D Humanoid Multi-Contact Fall Mitigation"
     if len(sys.argv)<=1:
@@ -49,8 +47,9 @@ def main():
         if not result:
             raise RuntimeError("Unable to load model " + fn)
 
+
     # The definition of the environment into an efficient way
-    global Terr_Model;                  Terr_Model = Terr_Model_Cal(world)
+    Terr_Model = Terr_Model_Cal(world)
 
     # The following function can be used in two ways: the first way is to load the Config_Init.config file while the second way is to load two
     # DOF, Config_Init, Velocity_Init = State_Loader_fn("Init_Config.config", Robot_Option)
@@ -60,12 +59,11 @@ def main():
     # State_Writer_fn(Config_Init, "Init_Config_from_txt.config", Robot_Option)
     # State_Writer_fn(Config_Init, Velocity_Init, "Inn_Config.txt", "Inn_Velo.txt",Robot_Option)
 
-    global Contact_Link_Dictionary;
     Contact_Link_Dictionary = Contact_Link_Reader("Contact_Link.txt", Robot_Option)
     Contact_Status_Dictionary_Init = Contact_Status_Reader("Init_Contact.txt", Robot_Option)
     # According to the initial condition of the robot contact status, a basic optimization may have to be contacted to enforce the initial constraints.
-    # ipdb.set_trace()
-    # # # Now it is the validation of the feasibility of the given initial condition
+
+    # Now it is the validation of the feasibility of the given initial condition
     State_Init = List_Append_fn(Config_Init, Velocity_Init)
 
     Config_Init, Velocity_Init = Robot_Init_Opt_fn(world, State_Init, Contact_Link_Dictionary, Contact_Status_Dictionary_Init, Terr_Model)
@@ -75,48 +73,43 @@ def main():
     # Root node initialization
     Root_Node = TreeNode_Dict_Init(world, Config_Init, Velocity_Init, Contact_Link_Dictionary, Contact_Status_Dictionary_Init, All_TreeNodes)
     Frontier_Add(Frontier_Nodes, Root_Node)
-    # Seed_Conf_Optimization_ObjNConstraint(world, Root_Node, Root_Node, Contact_Link_Dictionary, Terr_Model, State_Init)
-    # Seed_Guess_Gene(world, Root_Node, Root_Node, Contact_Link_Dictionary, Terr_Model, Robot_Option, 1.0, 8)
+
+    Impact_Mapping_fn(world, State_Init, Root_Node, Contact_Link_Dictionary)
+
+
     while len(Frontier_Nodes)>0:
-        Current_Node = Frontier_Pop(Frontier_Nodes)
+        treenode_parent = Frontier_Pop(Frontier_Nodes)
         """"
         * For the current node, first is the Node_Self_Opt to optimize a motion while maintain the current mode
         * if this does not work, then expand the current node into the adjacent nodes then do the Nodes_Connectivity_Opt
         """
-        Opt_Soln, Opt_Flag = Nodes_Optimization_fn(world, Current_Node, Current_Node, Contact_Link_Dictionary, Terr_Model, Robot_Option)
-
-        if Opt_Soln == True:
+        # Opt_Soln, Opt_Flag, Final_State = Nodes_Optimization_fn(world, treenode_parent, Current_Node, Contact_Link_Dictionary, Terr_Model, Robot_Option)
+        Opt_Flag = False
+        if Opt_Flag == True:
             # Here this means that the robot has already achieved a stabilized state with inertia shaping
-            Current_Node["IS"] = Opt_Soln
+            treenode_parent["IS"] = Opt_Soln
         else:
             # This means the node expansion has to be conducted to enable the stabilization with the modification of robot contacts
+            Children_Nodes_Contact_Status_List = Node_Expansion_fn(treenode_parent, Contact_Link_Dictionary.keys())
+            """
+                Then the job is to test the connectivity of the children nodes from the current node
+            """
+            ipdb.set_trace()
+            for i in range(0, len(Children_Nodes_Contact_Status_List)):
+                child_node_i_contact_status = Children_Nodes_Contact_Status_List[i]
+                # However, here the child_node_i has not been initialized
+                treenode_child = TreeNode_Dict_Init_CS(child_node_i_contact_status)
+                Opt_Soln, Opt_Flag, Final_State = Nodes_Optimization_fn(world, treenode_parent, treenode_child, Contact_Link_Dictionary, Terr_Model, Robot_Option)
+                if Opt_Flag == True:
+                    # This means that this child node is connectable
+                    treenode_child["P2C"] = Opt_Soln
+                    contact_type, contact_link_cmp_dict, contact_link_itc_dict = TreeNode_Status_CMP(treenode_parent, treenode_child)
+                    if contact_type == 1:
+                        # This means that there is impact mapping
+                        pass
 
-
-
-
-    # Given the pre-optimized robot state, we could directly load em in
-
-    robot_viewer = MyGLViewer(world, Config_Init, Velocity_Init)
-    ipdb.set_trace()
-
-    robot_viewer.drawContacts = True
-    robot_viewer.drawSensors = True
-    vis.setPlugin(robot_viewer)
-    vis.show()
-
-    robot_viewer_time = time.time()
-
-    robot_sim = robot_viewer.sim
-    sim_robot_controller = robot_sim.controller(0)
-
-    # Up to here the green shadow is no longer there anymore
-    Robot_State_Update(world.robot(0), State_Init)
-
-    while vis.shown():
-        time.sleep(0.1)
-        robot_sim.updateWorld()
-
-        sim_robot_controller.setMilestone(Config_Init, Velocity_Init)
+                else:
+                    pass
 
 if __name__ == "__main__":
     main()

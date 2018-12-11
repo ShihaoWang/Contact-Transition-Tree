@@ -1,4 +1,4 @@
-import sys, os
+import sys, os, copy
 from random import randint
 import numpy as np
 import math, ipdb
@@ -58,10 +58,10 @@ def Nodes_Optimization_fn(world, treenode_parent, treenode_child, contact_link_d
     Opt_Flag = False
     for Duration_i in Duration_list:
         # Inner operation
-        Opt_Soln, Opt_Flag = Nodes_Optimization_Inner_Opt(world, treenode_parent, treenode_child, contact_link_dictionary, terr_model, robot_option,  Duration_i, Grids_Number, Duration_min, Duration_max)
+        Opt_Soln, Opt_Flag, Final_State = Nodes_Optimization_Inner_Opt(world, treenode_parent, treenode_child, contact_link_dictionary, terr_model, robot_option,  Duration_i, Grids_Number, Duration_min, Duration_max)
         if Opt_Flag == True:
-            return Opt_Soln, Opt_Flag
-    return Opt_Soln, Opt_Flag
+            return Opt_Soln, Opt_Flag, Final_State
+    return Opt_Soln, Opt_Flag, Final_State
 
 def Nodes_Optimization_Inner_Opt(world, treenode_parent, treenode_child, contact_link_dictionary, terr_model, robot_option, duration, grids, duration_min, duration_max):
     # The inner optimization of this contact transition tree
@@ -127,7 +127,12 @@ def Nodes_Optimization_Inner_Opt(world, treenode_parent, treenode_child, contact
         sol_valid_flag = True
     else:
         sol_valid_flag = False
-    return rst.sol, sol_valid_flag
+
+    _, State_List_Array, _, _ = Seed_Guess_Unzip(rst.sol, DOF, Control_Force_Len, grids)
+
+    # Get the final robot state out for potential impact mapping
+
+    return rst.sol, sol_valid_flag, State_List_Array[grids - 1]
 
 def Nodes_Optimization_ObjNConstraint(world, treenode_parent, treenode_child, contact_link_dictionary, terr_model, robot_option, grids, DOF, control_force_len, seed_guess_list):
     # This is the core optimization function of this contact transition tree project
@@ -150,7 +155,8 @@ def Nodes_Optimization_ObjNConstraint(world, treenode_parent, treenode_child, co
                     Initial matching constraint condition
     """
     Parent_State = treenode_parent["State"];                    State_0 = State_List_Array[0]
-    Initial_Match_Constraint = State_0 - Parent_State
+    Initial_Match_Result = State_0 - Parent_State
+    Initial_Match_Constraint = Dot_Product(Initial_Match_Result, Initial_Match_Result)
     List_Obj_Update(Initial_Match_Constraint, 0, y_val, y_type)
     # ipdb.set_trace()
 
@@ -255,8 +261,11 @@ def Nodes_Optimization_ObjNConstraint(world, treenode_parent, treenode_child, co
                                    1. The net force should lie within the friction cone.
                                    2. The inactive contact points should not have nonzero forces there.
     """
-    Transien_Contact_Status = treenode_parent["Contact_Status"].copy()
-    Terminal_Contact_Status = treenode_child["Contact_Status"].copy()
+    Transien_Contact_Status = copy.deepcopy(treenode_parent["Contact_Status"])
+    Terminal_Contact_Status = copy.deepcopy(treenode_child["Contact_Status"])
+
+    # Transien_Contact_Status = treenode_parent["Contact_Status"].copy()
+    # Terminal_Contact_Status = treenode_child["Contact_Status"].copy()
 
     # ipdb.set_trace()
     for i in range(0, grids):
@@ -279,5 +288,4 @@ def Nodes_Optimization_ObjNConstraint(world, treenode_parent, treenode_child, co
     """
         Constraint 7: self-collision constraint to be added in future!
     """
-    # ipdb.set_trace()
     return y_val, y_type
