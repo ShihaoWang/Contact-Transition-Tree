@@ -238,10 +238,10 @@ def Nodes_Optimization_ObjNConstraint(world, treenode_parent, treenode_child, co
                 At_i_Opt_Link_j_Vel_k = At_i_Contact_Link_PosNVel[j]["Vel"][k]
 
                 At_i_Ref_Opt_Link_j_Pos_k_Constraint = List_Minus_fn(At_i_Ref_Link_j_Pos_k, At_i_Opt_Link_j_Pos_k)
-                # At_i_Ref_Opt_Link_j_Vel_k_Constraint = List_Minus_fn(At_i_Ref_Link_j_Vel_k, At_i_Opt_Link_j_Vel_k)
+                At_i_Ref_Opt_Link_j_Vel_k_Constraint = List_Minus_fn(At_i_Ref_Link_j_Vel_k, At_i_Opt_Link_j_Vel_k)
 
                 List_Obj_Update(At_i_Ref_Opt_Link_j_Pos_k_Constraint, 0, y_val, y_type)
-                # List_Obj_Update(At_i_Ref_Opt_Link_j_Vel_k_Constraint, 0, y_val, y_type)
+                List_Obj_Update(At_i_Ref_Opt_Link_j_Vel_k_Constraint, 0, y_val, y_type)
 
     """
         Constraint 4:
@@ -260,27 +260,22 @@ def Nodes_Optimization_ObjNConstraint(world, treenode_parent, treenode_child, co
                 y_val.append(Final_Contact_PosNVel_Link_i_Pos_j_Dist)
                 y_type.append(0)
 
-    # """
-    #     Constraint 5:
-    #                 Contact Force: Complementarity and Feasibility
-    #                                1. The net force should lie within the friction cone.
-    #                                2. The inactive contact points should not have nonzero forces there.
-    # """
-    # Transien_Contact_Status = copy.deepcopy(treenode_parent["Contact_Status"])
-    # Terminal_Contact_Status = copy.deepcopy(treenode_child["Contact_Status"])
-    #
-    # # Transien_Contact_Status = treenode_parent["Contact_Status"].copy()
-    # # Terminal_Contact_Status = treenode_child["Contact_Status"].copy()
-    #
-    # # ipdb.set_trace()
-    # for i in range(0, grids):
-    #     At_i_Contact_Force = Contact_Force_List_Array[i]            # This contact force corresponds to the contat point Jacobian matrix
-    #     # Here the contact force is a column vector
-    #     # The order of the contact force obeys the order of the contact link list
-    #     if i<grids-1:
-    #         Contact_Force_Constraint(At_i_Contact_Force, contact_link_list, Transien_Contact_Status, terr_model, y_val, y_type)
-    #     else:
-    #         Contact_Force_Constraint(At_i_Contact_Force, contact_link_list, Terminal_Contact_Status, terr_model, y_val, y_type)
+    """
+        Constraint 5:
+                    Contact Force: Complementarity and Feasibility
+                                   1. The net force should lie within the friction cone.
+                                   2. The inactive contact points should not have nonzero forces there.
+    """
+    Transien_Contact_Status = copy.deepcopy(treenode_parent["Contact_Status"])
+    Terminal_Contact_Status = copy.deepcopy(treenode_child["Contact_Status"])
+    for i in range(0, grids):
+        At_i_Contact_Force = Contact_Force_List_Array[i]            # This contact force corresponds to the contat point Jacobian matrix
+        # Here the contact force is a column vector
+        # The order of the contact force obeys the order of the contact link list
+        if i<grids-1:
+            Contact_Force_Constraint(At_i_Contact_Force, contact_link_list, Transien_Contact_Status, terr_model, y_val, y_type)
+        else:
+            Contact_Force_Constraint(At_i_Contact_Force, contact_link_list, Terminal_Contact_Status, terr_model, y_val, y_type)
     """
         Constraint 6:
                     Kinetic energy threshold constraint

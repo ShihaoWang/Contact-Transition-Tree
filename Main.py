@@ -13,6 +13,8 @@ from klampt.model.trajectory import Trajectory
 import time
 import math
 
+sys.path.insert(0, './Functions')
+
 from OwnLib import *
 from Terrain_Fun import *
 from Visualization_Fun import *
