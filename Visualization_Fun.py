@@ -52,16 +52,73 @@ class MyGLPlugin(vis.GLPluginInterface):
                 collided.append((dist,g[0]))
         return [g[1] for g in sorted(collided)]
 
+def Total_Robot_Motion_Plot(world, DOF, contact_link_dictionary, terr_model, robot_option, grids, time_duration_list, solution_list):
+    Contact_Force_Length = 0
+    for contact_link_index_i in contact_link_dictionary.keys():
+        contact_link_index_i_extremities = contact_link_dictionary[contact_link_index_i]
+        for contact_link_index_i_extremity in contact_link_index_i_extremities:
+            Contact_Force_Length = Contact_Force_Length + 1
+    Contact_Force_List_Length = Contact_Force_Length * 3        # 3-dimensional force
 
-def Robot_Motion_Plot(world, DOF, control_force_len, contact_link_dictionary, terr_model, robot_option, grids, optimized_solution):
+    # Initialize the robot motion viewer
+    robot_viewer = MyGLPlugin(world)
+    vis.pushPlugin(robot_viewer)
+    vis.add("world", world)
+    vis.show()
+
+    robot_viewer_time = time.time()
+    # robot_sim = robot_viewer.sim
+    sim_robot = world.robot(0)
+    # sim_robot_controller = robot_sim.controller(0)
+    contact_link_list = contact_link_dictionary.keys()
+    robot_mass = Robot_Total_Mass(world)
+    robot_gravity = robot_mass * 9.81
+
+    force_unit_length = 0.5
+    interpolated_times = 5
+
+    # Segment number
+    Motion_Number = len(time_duration_list)
+    while vis.shown():
+        for index in range(0, Motion_Number):
+            time_duration_i = time_duration_list[index]
+            solution_i = solution_list[index]
+            optimized_solution_i = time_duration_i + solution_i
+            Duration, State_List_Array, Control_List_Array, Contact_Force_List_Array = Seed_Guess_Unzip(optimized_solution_i, DOF, Contact_Force_List_Length, grids)
+            # Data interpolation
+            Inter_Time_Array, Inter_State_Array = Trajectory_Interpolation(Duration, grids, State_List_Array, interpolated_times)
+            Inter_Time_Array, Inter_Contact_Force_Array = Trajectory_Interpolation(Duration, grids, Contact_Force_List_Array, interpolated_times)
+
+            # This is the main plot program
+            for i in range(0, grids * interpolated_times):
+                vis.lock()
+                Robotstate_Traj_i = Inter_State_Array[i];
+                RobotConfig_Traj_i = Robotstate_Traj_i[0:DOF]
+                sim_robot.setConfig(RobotConfig_Traj_i)
+                # Now it is the plot of the contact force at the contact extremities
+                Contact_Force_Traj_i = Inter_Contact_Force_Array[i]
+                # Here Contact_Link_PosNVel_List is a list of dictionaries and the list is
+                Contact_Link_PosNVel_List = Contact_Link_PosNVel(sim_robot, contact_link_dictionary, -1)
+                Contact_Force_Index = 0
+                for i in range(0, len(contact_link_list)):
+                    Contact_Link_i_PosNVel = Contact_Link_PosNVel_List[i]
+                    Contact_Link_i_Pos_List = Contact_Link_i_PosNVel["Pos"]
+                    for j in range(0, len(Contact_Link_i_Pos_List)):
+                        Contact_Link_i_Pos_j = Contact_Link_i_Pos_List[j]
+                        Contact_Link_i_Pos_j_Contact_Force = Contact_Force_Element_from_Index(Contact_Force_Traj_i, Contact_Force_Index)
+                        contact_start_pos, contact_terminal_pos = Contact_Force_Mag_2_Vec(Contact_Link_i_Pos_j, Contact_Link_i_Pos_j_Contact_Force, robot_gravity, force_unit_length)
+                        force_string_name =" " *  Contact_Force_Index
+                        vis.add(force_string_name, Trajectory([0, 1], [contact_start_pos, contact_terminal_pos]))
+                        Contact_Force_Index = Contact_Force_Index + 1
+                vis.unlock()
+                time.sleep(interpolated_times * (Inter_Time_Array[1] - Inter_Time_Array[0]))
+
+def Single_Robot_Motion_Plot(world, DOF, control_force_len, contact_link_dictionary, terr_model, robot_option, grids, optimized_solution):
     # This function is used to plot the robot motion
     # The optimized solution is used to plot the robot motion and the contact forces
 
     # Initialize the robot motion viewer
     robot_viewer = MyGLPlugin(world)
-    # robot_viewer.drawContacts = True
-    # robot_viewer.drawSensors = True
-
     # Here it is to unpack the robot optimized solution into a certain sets of the lists
     Duration, State_List_Array, Control_List_Array, Contact_Force_List_Array = Seed_Guess_Unzip(optimized_solution, DOF, control_force_len, grids)
 
@@ -85,7 +142,6 @@ def Robot_Motion_Plot(world, DOF, control_force_len, contact_link_dictionary, te
     force_unit_length = 0.5
     while vis.shown():
         # This is the main plot program
-
         for i in range(0, grids * interpolated_times):
             vis.lock()
             Robotstate_Traj_i = Inter_State_Array[i];
@@ -106,17 +162,12 @@ def Robot_Motion_Plot(world, DOF, control_force_len, contact_link_dictionary, te
                     force_string_name =" " *  Contact_Force_Index
                     vis.add(force_string_name, Trajectory([0, 1], [contact_start_pos, contact_terminal_pos]))
                     Contact_Force_Index = Contact_Force_Index + 1
-            # COMPos_start = sim_robot.getCom()
-            # COMPos_end = COMPos_start
-            # COMPos_end[2] = COMPos_end[2] + 100
-            # vis.add("Center of Mass",  Trajectory([0, 1], [COMPos_start, COMPos_end]))
             vis.unlock()
             time.sleep(interpolated_times * (Inter_Time_Array[1] - Inter_Time_Array[0]))
 
 def Contact_Force_Mag_2_Vec(contact_start_pos, contact_force, robot_gravity, force_unit_length):
     # This function is used to calculate the vector of certain contact from the link contact
     # Since this contact force is a 3 by 1 vector, here a little bit hard coding will be used
-    # ipdb.set_trace()
     contact_force_length_offset_x = contact_force[0]/robot_gravity * force_unit_length
     contact_force_length_offset_y = contact_force[1]/robot_gravity * force_unit_length
     contact_force_length_offset_z = contact_force[2]/robot_gravity * force_unit_length

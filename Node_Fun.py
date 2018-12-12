@@ -6,6 +6,7 @@ from compiler.ast import flatten
 from collections import Counter
 import pickle
 from OwnLib import *
+import datetime
 
 # This file containts the functions of the node operation
 def TreeNode_Dict_Init(world, config_i, velocity_i, contact_link_dictionary, contact_Status_Dictionary_i, all_treenode):
@@ -231,3 +232,71 @@ def Edge_Node_from_Face_Minus(edge_index, vertices_number):
     else:
         edge_contact[edge_index + 1] = 0
     return edge_contact
+
+def Final_Node_2_Root_Node(Final_Node, All_Nodes):
+    # This function is used to get the trajectories from the final node back to the root node
+    Time_Duration_List = []
+    Solution_List = []
+    Time_Duration_List.append(Final_Node["IC"][0])
+    Solution_List.append(Final_Node["IC"][1:])
+    Current_Node = copy.deepcopy(Final_Node)
+    while Current_Node["Parent"] != -1:
+        # Attach to the front of the lists
+        Time_Duration_List.insert(0, Current_Node["P2C"][0])
+        Solution_List.insert(0,Current_Node["P2C"][1:])
+        Current_Node = copy.deepcopy(All_Nodes[Current_Node["Parent"]])
+    return Time_Duration_List, Solution_List
+
+def CTT_Nodes_Write(Time_Duration_List, Solution_List, Grids_Number, Robot_Option):
+    # This function is used to write the CTT nodes to file after get them
+    """
+        The optimized txt file should be of the following format:
+        Grids8 (8 is a example of the grids number)
+        Duration1
+        Solution1
+        Grids8
+        Duration2
+        Solution2
+        .
+        .
+        .
+    """
+    # Get the proper name of the optimized solution
+    currentDT = datetime.datetime.now()     # Current time
+
+    file_name = str(currentDT.month) + "_" + str(currentDT.day) + "_" + str(currentDT.hour) + "_" + str(currentDT.minute) + "_Soln.txt"
+    file_path_name = Robot_Option + file_name
+    Txt_File = open(file_path_name, 'w')
+    for i in range(0, len(Time_Duration_List)):
+        # For each soln there is a default format
+        soln_i_header = "Grids" + str(Grids_Number)
+        print>>Txt_File, soln_i_header
+        soln_i_time = Solution_List[i]
+        print>>Txt_File, soln_i_time
+        for j in Solution_List:
+            print>>Txt_File, j
+    Txt_File.close()
+
+def CTT_Nodes_Read(Txt_File_Name, Robot_Option):
+    """
+        This function is used to read the CTT nodes solution
+    """
+    Time_Duration_List = []
+    Solution_List = []
+    file_name = Robot_Option + Txt_File_Name
+    with open(file_name) as Txt_File:
+        Txt_File_Str = Txt_File.read().splitlines()
+        for Txt_File_Str_i in Txt_File_Str:
+            if "Grids" in Txt_File_Str_i:
+                # This indicates the header of a certain solution
+                # Then the next few points would be the local coordinates of the contact extremities
+                Grids_Number = Txt_File_Str_i.translate(None, 'Grids')     # This step is to get the link number out
+                if len(Solution_List)>0:
+                    Time_Duration_List_i = Raw_Soln_List_i[0]
+                    Solution_List_i = Raw_Soln_List_i[1:]
+                    Time_Duration_List.append(Time_Duration_List_i)
+                    Solution_List.append(Solution_List_i)
+                Raw_Soln_List_i = []
+                continue
+            Raw_Soln_List_i.append(float(Txt_File_Str_i))
+    return Time_Duration_List, Solution_List, Grids_Number

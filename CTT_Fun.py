@@ -43,7 +43,7 @@ class Nodes_Optimization_Inner_Opt_Prob(probFun):
         # This function will be used if the analytic gradient is provided
         pass
 
-def Nodes_Optimization_fn(world, treenode_parent, treenode_child, contact_link_dictionary, terr_model, robot_option):
+def Nodes_Optimization_fn(world, treenode_parent, treenode_child, contact_link_dictionary, terr_model, robot_option, Grids_Number):
     """
     This function will optimize the joint trajectories to minimize the robot kinetic energy while maintaining a smooth transition fashion
     """
@@ -54,19 +54,18 @@ def Nodes_Optimization_fn(world, treenode_parent, treenode_child, contact_link_d
     Duration_array = np.linspace(Duration_min, Duration_max, Duration_Grids_number)
     Duration_list = Duration_array.tolist()
 
-    Grids_Number = 8
     Opt_Flag = False
     for Duration_i in Duration_list:
         # Inner operation
-        Opt_Soln, Opt_Flag, Final_State = Nodes_Optimization_Inner_Opt(world, treenode_parent, treenode_child, contact_link_dictionary, terr_model, robot_option,  Duration_i, Grids_Number, Duration_min, Duration_max)
+        Opt_Soln, Opt_Flag, Final_State_List = Nodes_Optimization_Inner_Opt(world, treenode_parent, treenode_child, contact_link_dictionary, terr_model, robot_option,  Duration_i, Grids_Number, Duration_min, Duration_max)
         if Opt_Flag == True:
-            return Opt_Soln, Opt_Flag, Final_State
-    return Opt_Soln, Opt_Flag, Final_State
+            return Opt_Soln, Opt_Flag, Final_State_List
+    return Opt_Soln, Opt_Flag, Final_State_List
 
 def Nodes_Optimization_Inner_Opt(world, treenode_parent, treenode_child, contact_link_dictionary, terr_model, robot_option, duration, grids, duration_min, duration_max):
     # The inner optimization of this contact transition tree
     Seed_Guess_List, DOF, Control_Force_Len = Seed_Guess_Gene(world, treenode_parent, treenode_child, contact_link_dictionary, terr_model, robot_option, duration, grids)
-    # ipdb.set_trace()
+
     # Robot_Motion_Plot(world, DOF, Control_Force_Len, contact_link_dictionary, terr_model, robot_option, grids, Seed_Guess_List)
 
     # Nodes_Optimization_ObjNConstraint(world, treenode_parent, treenode_child, contact_link_dictionary, terr_model, robot_option, grids, DOF, Control_Force_Len, Seed_Guess_List)
@@ -132,11 +131,14 @@ def Nodes_Optimization_Inner_Opt(world, treenode_parent, treenode_child, contact
 
     # Get the final robot state out for potential impact mapping
 
-    return rst.sol, sol_valid_flag, State_List_Array[grids - 1]
+    return rst.sol, sol_valid_flag, State_List_Array[grids - 1].tolist()
 
 def Nodes_Optimization_ObjNConstraint(world, treenode_parent, treenode_child, contact_link_dictionary, terr_model, robot_option, grids, DOF, control_force_len, seed_guess_list):
     # This is the core optimization function of this contact transition tree project
     sim_robot = world.robot(0);
+    contact_link_list = contact_link_dictionary.keys()
+    contact_type, contact_link_cmp_dict, contact_link_itc_dict = TreeNode_Status_CMP(treenode_parent, treenode_child)
+
     # Constraint value and type
     y_val = [];                                                 y_type = []
 
@@ -145,7 +147,12 @@ def Nodes_Optimization_ObjNConstraint(world, treenode_parent, treenode_child, co
     """
         Objective function: Kinetic energy at the terminal time
     """
-    Final_State = State_List_Array[grids - 1]
+    if contact_type == 1:
+        # Impact mapping kinetic energy
+        Final_State_Config, Final_State_Velocity = Impact_Mapping_fn(world, State_List_Array[grids - 1], treenode_child, contact_link_dictionary)
+        Final_State = Final_State_Config + Final_State_Velocity
+    else:
+        Final_State = State_List_Array[grids - 1]
     Robot_State_Update(sim_robot, Final_State)
     Final_KE = Kinetic_Energy_fn(sim_robot, Final_State)
     y_val.append(Final_KE);                                     y_type.append(1)
@@ -166,9 +173,6 @@ def Nodes_Optimization_ObjNConstraint(world, treenode_parent, treenode_child, co
     """
     # Here T stands for the time duration between two next grids
     T = Duration/(grids - 1.0)
-
-    contact_link_list = contact_link_dictionary.keys()
-    contact_type, contact_link_cmp_dict, contact_link_itc_dict = TreeNode_Status_CMP(treenode_parent, treenode_child)
 
     for i in range(0, grids - 1):
 
