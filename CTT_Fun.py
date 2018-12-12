@@ -108,10 +108,11 @@ def Nodes_Optimization_Inner_Opt(world, treenode_parent, treenode_child, contact
     Nodes_Optimization_Inner.lb = lb;                       Nodes_Optimization_Inner.ub = ub
     cfg = snoptConfig()
     cfg.printLevel = 1;
-    # cfg.printFile = "result.txt"
-    cfg.majorIterLimit = 300
-    cfg.minorIterLimit = 50000
-    # ipdb.set_trace()
+    cfg.minorPrintLevel = 1
+    cfg.printFile = "result.txt"
+    cfg.majorIterLimit = 3000
+    cfg.minorIterLimit = 50000000
+    cfg.iterLimit = 50000000
 
     slv = solver(Nodes_Optimization_Inner, cfg)
     # rst = slv.solveRand()
@@ -163,9 +164,9 @@ def Nodes_Optimization_ObjNConstraint(world, treenode_parent, treenode_child, co
     """
     Parent_State = treenode_parent["State"];                    State_0 = State_List_Array[0]
     Initial_Match_Result = State_0 - Parent_State
-    Initial_Match_Constraint = Dot_Product(Initial_Match_Result, Initial_Match_Result)
-    List_Obj_Update(Initial_Match_Constraint, 0, y_val, y_type)
-    # ipdb.set_trace()
+    for Initial_Match_i in Initial_Match_Result:
+        y_val.append(Initial_Match_i * Initial_Match_i)
+        y_type.append(0)
 
     """
         Constraint 2:

@@ -81,8 +81,8 @@ def main():
         * For the current node, first is the Node_Self_Opt to optimize a motion while maintain the current mode
         * if this does not work, then expand the current node into the adjacent nodes then do the Nodes_Connectivity_Opt
         """
-        # Opt_Soln, Opt_Flag, Final_State = Nodes_Optimization_fn(world, treenode_parent, Current_Node, Contact_Link_Dictionary, Terr_Model, Robot_Option, Grids_Number)
-        Opt_Flag = False
+        Opt_Soln, Opt_Flag, Final_State = Nodes_Optimization_fn(world, treenode_parent, treenode_parent, Contact_Link_Dictionary, Terr_Model, Robot_Option, Grids_Number)
+        ipdb.set_trace()
         if Opt_Flag == True:
             # Here this means that the robot has already achieved a stabilized state with inertia shaping
             treenode_parent["IS"] = Opt_Soln
@@ -120,7 +120,12 @@ def main():
                     Frontier_Add(Frontier_Nodes, child_node)
 
     # Here the contact transition tree has already been finished!
+    # Write soln to file!
+    CTT_Nodes_Write(Time_Duration_List, Solution_List, Grids_Number, Robot_Option)
 
+    # Read soln from file!
+    # Txt_File_Name =
+    # Time_Duration_List, Solution_List = CTT_Nodes_Read(Txt_File_Name, Robot_Option)
 
     # Total robot animation
     Total_Robot_Motion_Plot(world, DOF, Contact_Link_Dictionary, Terr_Model, Robot_Option, Grids_Number, Time_Duration_List, Solution_List)
