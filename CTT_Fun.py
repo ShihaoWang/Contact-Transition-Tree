@@ -144,14 +144,14 @@ def Nodes_Optimization_ObjNConstraint(world, treenode_parent, treenode_child, co
     y_val = [];                                                 y_type = []
 
     Duration, State_List_Array, Control_List_Array, Contact_Force_List_Array = Seed_Guess_Unzip(seed_guess_list, DOF, control_force_len, grids)
-
     """
         Objective function: Kinetic energy at the terminal time
     """
     if contact_type == 1:
         # Impact mapping kinetic energy
         Final_State_Config, Final_State_Velocity = Impact_Mapping_fn(world, State_List_Array[grids - 1], treenode_child, contact_link_dictionary)
-        Final_State = Final_State_Config + Final_State_Velocity
+        Final_State = np.append(Final_State_Config, Final_State_Velocity)
+        # Final_State = Final_State_Config + Final_State_Velocity
     else:
         Final_State = State_List_Array[grids - 1]
     Robot_State_Update(sim_robot, Final_State)
@@ -238,10 +238,10 @@ def Nodes_Optimization_ObjNConstraint(world, treenode_parent, treenode_child, co
                 At_i_Opt_Link_j_Vel_k = At_i_Contact_Link_PosNVel[j]["Vel"][k]
 
                 At_i_Ref_Opt_Link_j_Pos_k_Constraint = List_Minus_fn(At_i_Ref_Link_j_Pos_k, At_i_Opt_Link_j_Pos_k)
-                At_i_Ref_Opt_Link_j_Vel_k_Constraint = List_Minus_fn(At_i_Ref_Link_j_Vel_k, At_i_Opt_Link_j_Vel_k)
+                # At_i_Ref_Opt_Link_j_Vel_k_Constraint = List_Minus_fn(At_i_Ref_Link_j_Vel_k, At_i_Opt_Link_j_Vel_k)
 
                 List_Obj_Update(At_i_Ref_Opt_Link_j_Pos_k_Constraint, 0, y_val, y_type)
-                List_Obj_Update(At_i_Ref_Opt_Link_j_Vel_k_Constraint, 0, y_val, y_type)
+                # List_Obj_Update(At_i_Ref_Opt_Link_j_Vel_k_Constraint, 0, y_val, y_type)
 
     """
         Constraint 4:
@@ -260,27 +260,27 @@ def Nodes_Optimization_ObjNConstraint(world, treenode_parent, treenode_child, co
                 y_val.append(Final_Contact_PosNVel_Link_i_Pos_j_Dist)
                 y_type.append(0)
 
-    """
-        Constraint 5:
-                    Contact Force: Complementarity and Feasibility
-                                   1. The net force should lie within the friction cone.
-                                   2. The inactive contact points should not have nonzero forces there.
-    """
-    Transien_Contact_Status = copy.deepcopy(treenode_parent["Contact_Status"])
-    Terminal_Contact_Status = copy.deepcopy(treenode_child["Contact_Status"])
-
-    # Transien_Contact_Status = treenode_parent["Contact_Status"].copy()
-    # Terminal_Contact_Status = treenode_child["Contact_Status"].copy()
-
-    # ipdb.set_trace()
-    for i in range(0, grids):
-        At_i_Contact_Force = Contact_Force_List_Array[i]            # This contact force corresponds to the contat point Jacobian matrix
-        # Here the contact force is a column vector
-        # The order of the contact force obeys the order of the contact link list
-        if i<grids-1:
-            Contact_Force_Constraint(At_i_Contact_Force, contact_link_list, Transien_Contact_Status, terr_model, y_val, y_type)
-        else:
-            Contact_Force_Constraint(At_i_Contact_Force, contact_link_list, Terminal_Contact_Status, terr_model, y_val, y_type)
+    # """
+    #     Constraint 5:
+    #                 Contact Force: Complementarity and Feasibility
+    #                                1. The net force should lie within the friction cone.
+    #                                2. The inactive contact points should not have nonzero forces there.
+    # """
+    # Transien_Contact_Status = copy.deepcopy(treenode_parent["Contact_Status"])
+    # Terminal_Contact_Status = copy.deepcopy(treenode_child["Contact_Status"])
+    #
+    # # Transien_Contact_Status = treenode_parent["Contact_Status"].copy()
+    # # Terminal_Contact_Status = treenode_child["Contact_Status"].copy()
+    #
+    # # ipdb.set_trace()
+    # for i in range(0, grids):
+    #     At_i_Contact_Force = Contact_Force_List_Array[i]            # This contact force corresponds to the contat point Jacobian matrix
+    #     # Here the contact force is a column vector
+    #     # The order of the contact force obeys the order of the contact link list
+    #     if i<grids-1:
+    #         Contact_Force_Constraint(At_i_Contact_Force, contact_link_list, Transien_Contact_Status, terr_model, y_val, y_type)
+    #     else:
+    #         Contact_Force_Constraint(At_i_Contact_Force, contact_link_list, Terminal_Contact_Status, terr_model, y_val, y_type)
     """
         Constraint 6:
                     Kinetic energy threshold constraint

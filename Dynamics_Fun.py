@@ -77,7 +77,6 @@ def Impact_Mapping_fn(world, final_state, treenode_child, contact_link_dictionar
                             2. The collsiion is inelastic.
     """
     # q_new, qdot_new = Impact_Mapping_fn(world, State_Init, Root_Node, Contact_Link_Dictionary)
-
     sim_robot = world.robot(0)
     Robot_State_Update(sim_robot, final_state)
     D_q, CG_q_qdot, Jac_Full, Jac_Full_Trans = Dynamics_Matrices(sim_robot, contact_link_dictionary)
@@ -89,7 +88,7 @@ def Impact_Mapping_fn(world, final_state, treenode_child, contact_link_dictionar
     Negative_Impulse = np.matmul(np.linalg.pinv(J_D_inv_J_Trans), J_qdot_old)
     Impulse = np.dot(Negative_Impulse,-1)
     qdot_offset = np.matmul(np.matmul(np.linalg.inv(D_q), Jac_Act_Trans_Array), Impulse)
-    qdot_new = qdot_old[:]
+    qdot_new = np.copy(qdot_old)
     for i in range(0, len(qdot_new)):
         qdot_new[i] = qdot_new[i] + qdot_offset[i]
     return q_old, qdot_new

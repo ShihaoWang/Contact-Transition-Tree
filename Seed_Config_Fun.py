@@ -36,7 +36,6 @@ class Seed_Conf_Optimization_Prob(probFun):
 
 def Seed_Conf_Optimization_ObjNConstraint(world, treenode_parent, treenode_child, contact_link_dictionary, terr_model, ref_state, seed_state):
     # This function is useed to optimize a robot state such that it is on the constraint manifold
-
     # Update the robotstate according to the seed_state
     sim_robot = world.robot(0);                             Robot_State_Update(sim_robot, seed_state)
     # Constraint value and type
@@ -88,10 +87,9 @@ def Seed_Conf_Optimization_ObjNConstraint(world, treenode_parent, treenode_child
         Child_Contact_PosNVel_Link_i_Pos = Child_Contact_PosNVel_Link_i["Pos"]
         for j in range(0, len(Child_Contact_PosNVel_Link_i_Pos)):
             Child_Contact_PosNVel_Link_i_Pos_j = Child_Contact_PosNVel_Link_i_Pos[j]
-            Child_Contact_PosNVel_Link_i_Pos_j_Dist = Robot_Link_2_All_Terr_Dist(Child_Contact_PosNVel_Link_i_Pos_j, terr_model)
-            if Child_Contact_PosNVel_Link_i_Pos_j_Dist<0:
-                y_val.append(Child_Contact_PosNVel_Link_i_Pos_j_Dist)
-                y_type.append(1)
+            Child_Contact_PosNVel_Link_i_Pos_j_Dist, _, _ = Robot_Link_2_All_Terr_Dist(Child_Contact_PosNVel_Link_i_Pos_j, terr_model)
+            y_val.append(Child_Contact_PosNVel_Link_i_Pos_j_Dist)
+            y_type.append(1)
 
     # 3. Contact Addition constraint
     if contact_type == 1:
@@ -100,9 +98,12 @@ def Seed_Conf_Optimization_ObjNConstraint(world, treenode_parent, treenode_child
             Child_Contact_PosNVel_Link_i_Pos = Child_Contact_PosNVel_Link_i["Pos"]
             for j in contact_link_cmp_dict[contact_link_list[i]]:
                 Child_Contact_PosNVel_Link_i_Pos_j = Child_Contact_PosNVel_Link_i_Pos[j]
-                Child_Contact_PosNVel_Link_i_Pos_j_Dist = Robot_Link_2_All_Terr_Dist(Child_Contact_PosNVel_Link_i_Pos_j, terr_model)
+                Child_Contact_PosNVel_Link_i_Pos_j_Dist, Child_Contact_PosNVel_Link_i_Pos_j_Edge, _ = Robot_Link_2_All_Terr_Dist(Child_Contact_PosNVel_Link_i_Pos_j, terr_model)
+                # ipdb.set_trace()
                 y_val.append(Child_Contact_PosNVel_Link_i_Pos_j_Dist)
                 y_type.append(0)
+                y_val.append(Child_Contact_PosNVel_Link_i_Pos_j_Edge)
+                y_type.append(1)
     return y_val, y_type
 
 def Seed_Guess_Gene_Robotstate(world, treenode_parent, treenode_child, contact_link_dictionary, terr_model, robot_ref_state):
@@ -121,7 +122,6 @@ def Seed_Guess_Gene_Robotstate(world, treenode_parent, treenode_child, contact_l
     # Optimization problem setup
     Seed_Conf_Opt = Seed_Conf_Optimization_Prob(world, treenode_parent, treenode_child, contact_link_dictionary, terr_model, robot_ref_state)
     Seed_Conf_Opt.xlb = xlb;                   Seed_Conf_Opt.xub = xub
-
     # This self structure is different from the previous self structure defined in the optimization problem
     y_val, y_type = Seed_Conf_Optimization_ObjNConstraint(world, treenode_parent, treenode_child, contact_link_dictionary, terr_model, robot_ref_state, robot_ref_state)
     lb, ub = Constraint_Bounds(y_type)

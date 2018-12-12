@@ -49,13 +49,13 @@ def Seed_Guess_Gene(world, treenode_parent, treenode_child, contact_link_diction
         robot_ref_state[i] = state_i_pos
         robot_ref_state[i + Robot_DOF] = 0
 
-    # State_Writer_fn(robot_ref_state[0:Robot_DOF], "Ref_Config.config", robot_option)
+    State_Writer_fn(robot_ref_state[0:Robot_DOF], "Ref_Config.config", robot_option)
 
     # Second step is to project this reference robot state into the constrained manifold
-    # Goal_Config, Goal_Velocity = Seed_Guess_Gene_Robotstate(world, treenode_parent, treenode_child, contact_link_dictionary, terr_model, robot_ref_state)
+    Goal_Config, Goal_Velocity = Seed_Guess_Gene_Robotstate(world, treenode_parent, treenode_child, contact_link_dictionary, terr_model, robot_ref_state)
     # State_Writer_fn(Goal_Config, Goal_Velocity, "Goal_Config.txt", "Goal_Velocity.txt",robot_option)
-    DOF, Goal_Config, Goal_Velocity = State_Loader_fn("Goal_Config.txt", "Goal_Velocity.txt", robot_option)
-    # State_Writer_fn(Goal_Config, "Goal_Config.config", robot_option)
+    # DOF, Goal_Config, Goal_Velocity = State_Loader_fn("Goal_Config.txt", "Goal_Velocity.txt", robot_option)
+    State_Writer_fn(Goal_Config, "Goal_Config.config", robot_option)
 
     # Third step is to construct a parabolic spline to connect the initial state to the goal configuration
     # For each DOF, its path should be of the following form: y(s) = a*s^2 + b*s + c
