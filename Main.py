@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import osqp
+# import osqp
 import sys, os
 from klampt import *
 from klampt import vis

@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <world>
   <!-- <robot name="JQrobot" file="/home/shihao/Desktop/JQRobot_URDF_With_Head/JQRobot.rob"/> -->
-  <robot name="JQrobot" file="/home/shihao/Klampt/data/robots/hrp2.rob"/>
+  <robot name="JQrobot" file="/home/shihao/Klampt-examples/data/robots/hrp2.rob"/>
   <!-- <terrain file="/home/shihao/Klampt/data/terrains/stair.off" scale = "0.5 0.5 0.5" translation= "0.0 0.0 0.0"/> -->
-  <terrain file="/home/shihao/Klampt/data/terrains/plane.off" scale = "0.5 0.5 0.5" translation= "0.0 0.0 0.0"/>
-  <terrain file="/home/shihao/Klampt/data/terrains/cube.off" scale="1 1 2" translation="2.5 -0.5 0.0">
+  <terrain file="/home/shihao/Klampt-examples/data/terrains/plane.off" scale = "0.5 0.5 0.5" translation= "0.0 0.0 0.0"/>
+  <terrain file="/home/shihao/Klampt-examples/data/terrains/cube.off" scale="1 1 2" translation="2.5 -0.5 0.0">
      <display color="0.4 0.3 0.2"/>
   </terrain>
   <!-- <terrain file="/home/shihao/Klampt/data/terrains/cube.off" scale="1 1 1" translation="0 0.0 0.0" rotateZ = "0"/> -->
