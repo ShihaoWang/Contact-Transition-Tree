@@ -14,7 +14,7 @@ Installation has been tested on a fresh install of Ubuntu 14.04 with Python 2.7.
 Package compilation requres:
 * [Klampt](https://github.com/krishauser/Klampt): An open-source, cross-platform software package for robot modeling, simulating, planning, optimization, and visualization.
 * [trajOptLib](https://gitlab.oit.duke.edu/gt70/trajOptLib) : A library for trajectory optimization using direct transcription approach. (This package replies on [SNOPT](https://github.com/snopt) and [IPOPT](https://github.com/coin-or/Ipopt) and please have at least one of these two solvers ready to use this package.)
-  
+
 >You need to follow the installation instruction of these two dependecies to make use of this _contact transition tree optimization_ package.  
 
 After installation of these two dependencies, you just need to clone this repository to your local disk to finish the installation.
@@ -25,7 +25,7 @@ cd Contact\ Transition\ Tree/
 ```
 
 ## Instructions
-This package supports any humanoid robot and reads in any environment customized by the user to satisfy the need to real-world humanoid fall mitigation. Since this package replies on [Klampt](https://github.com/krishauser/Klampt) for operations on robot, a Klampt preferred URDF format has to be changed accordingly to enable the robot feature identification. A Klampt URDF tutorial can be found [here](https://github.com/krishauser/Klampt/blob/master/Documentation/Tutorials/Import-and-calibrate-urdf.md). 
+This package supports any humanoid robot and reads in any environment customized by the user to satisfy the need to real-world humanoid fall mitigation. Since this package replies on [Klampt](https://github.com/krishauser/Klampt) for operations on robot, a Klampt preferred URDF format has to be changed accordingly to enable the robot feature identification. A Klampt URDF tutorial can be found [here](https://github.com/krishauser/Klampt/blob/master/Documentation/Tutorials/Import-and-calibrate-urdf.md).
 
 ### Import Robot
 
@@ -50,7 +50,7 @@ You need to use Klampt's RobotPose or RobotTest apps to figure out the correspon
 
 **How to figure out the local coordinates of contact extremities?**  
 This procedure can be conducted with the help of some CAD softwares such as Solidworks, MeshLab, and AutoCAD.
-* **Init_Contact.txt**: a file describing the contact status at the initial robot state. **1** denotes a contact point is active while **0** denotes a contact point is inactive. 
+* **Init_Contact.txt**: a file describing the contact status at the initial robot state. **1** denotes a contact point is active while **0** denotes a contact point is inactive.
 
 Two supplemental robot files have already been provided for your information on how to import robot.
 
@@ -96,13 +96,9 @@ python Main.py Robot_Envi.xml
 
 >Please remember to change the path to robot model in **Robot_Envi.xml** and **Robot_Option** parameter in the **Main.py** whenever there is a modification of the robot model.
 
+## Package Output
+The direct output is a txt file from `CTT_Nodes_Write` function. The default name of this file would be **(month)\_(day)\_(hour)\_(minute)\_Soln.txt** and its name can be changed by modifying this `CTT_Nodes_Write` function. In addition, a `Total_Robot_Motion_Plot` function is provided for the visualization of the output trajectory. To call this visualization function, `CTT_Nodes_Read` function is used to load in the output txt file. **Main.py** shows how to use this read function in Line `129, 130`.
 
 Enjoy the contact transition tree optimization!
 
 If you encounter any problems with the code, want to report bugs, etc. please contact me at shihao.wang[at]duke[dot]edu.
-
-
-
-
-
-
