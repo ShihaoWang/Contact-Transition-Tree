@@ -1,7 +1,6 @@
 import sys, os, copy
 import numpy as np
-import math, ipdb
-import ipdb
+import math
 from OwnLib import *
 # import xml.etree.ElementTree as ET
 # from Main import *
@@ -104,7 +103,6 @@ def Terr_Model_Cal(world):
     # This function is used to calculate the necessary terrain model
     Terr_No = world.numTerrains()           # Number of Terrains
     Terr_Model = []                         # A list of dictionaries
-    # ipdb.set_trace()
     for i in range(0, Terr_No):
         terr_i = world.terrain(i)
         terr_model_i = Terr_List_Analysis(terr_i)

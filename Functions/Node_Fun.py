@@ -1,7 +1,6 @@
 import sys, os, copy
 import numpy as np
-import math, ipdb
-import ipdb
+import math
 from compiler.ast import flatten
 from collections import Counter
 import pickle
@@ -38,7 +37,7 @@ def TreeNode_Dict_Init(world, config_i, velocity_i, contact_link_dictionary, con
     TreeNode["Config"] = config_i
     TreeNode["Velocity"] = velocity_i
     TreeNode["State"] = List_Append_fn(config_i, velocity_i)
-    TreeNode["KE"] = Kinetic_Energy_fn(world.robot(0), state_i)
+    TreeNode["KE"] = world.robot(0).getKineticEnergy()
     TreeNode["Parent"] = -1
     TreeNode["Children"] = []
     TreeNode["Contact_PosNVel"] = Contact_Link_PosNVel(world.robot(0), contact_link_dictionary, -1)

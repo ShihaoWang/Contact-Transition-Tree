@@ -7,7 +7,7 @@ from trajOptLib.snoptWrapper import directSolve
 from trajOptLib.libsnopt import snoptConfig, probFun, solver
 import functools
 import numpy as np
-import math, ipdb
+import math
 from OwnLib import *
 from Terrain_Fun import *
 

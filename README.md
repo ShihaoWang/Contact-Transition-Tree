@@ -13,9 +13,9 @@ Installation has been tested on a fresh install of Ubuntu 14.04 with Python 2.7.
 ### Dependencies
 Package compilation requres:
 * [Klampt](https://github.com/krishauser/Klampt): An open-source, cross-platform software package for robot modeling, simulating, planning, optimization, and visualization.
-* [trajOptLib](https://gitlab.oit.duke.edu/gt70/trajOptLib) : A library for trajectory optimization using direct transcription approach. (This package replies on [SNOPT](https://github.com/snopt) and [IPOPT](https://github.com/coin-or/Ipopt) and please have at least one of these two solvers ready to use this package.)
+* [trajOptLib](https://gitlab.oit.duke.edu/gt70/trajOptLib) : A library for trajectory optimization using direct transcription approach. (This package replies on [SNOPT](https://github.com/snopt) or [IPOPT](https://github.com/coin-or/Ipopt) and please have at least one of these two solvers ready to use this package.)
 
->You need to follow the installation instruction of these two dependecies to make use of this _contact transition tree optimization_ package.  
+>You need to follow the installation instruction of these two dependencies to make use of this _contact transition tree optimization_ package.  
 
 After installation of these two dependencies, you just need to clone this repository to your local disk to finish the installation.
 

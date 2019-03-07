@@ -1,13 +1,31 @@
 import sys, os
 from random import randint
 import numpy as np
-import math, ipdb
+import math
 
 from OwnLib import *
 from Terrain_Fun import *
 from Visualization_Fun import *
 from Initial_Setup_Opt import *
 from Node_Fun import *
+import copy
+
+def AccFromTorque(sim_robot, contact_link_dictionary, Contact_Force, Control):
+    Gravity = sim_robot.getGravityForces([0.0, 0.0, -9.81])
+    Jac_Full = []
+    for contact_link_index_i in contact_link_dictionary.keys():
+        robot_link_i = sim_robot.link(contact_link_index_i)
+        contact_link_index_i_extremities = contact_link_dictionary[contact_link_index_i]
+        for j in range(0, len(contact_link_index_i_extremities)):
+            robot_link_i_point_j = contact_link_index_i_extremities[j]
+            jac_link_i_point_j = robot_link_i.getPositionJacobian(robot_link_i_point_j)
+            for jac_link_i_point_j_coord_z in jac_link_i_point_j:
+                Jac_Full.append(jac_link_i_point_j_coord_z)
+    Jac_Full_Trans = np.array(map(list, zip(*Jac_Full)))
+    Control_ = np.array([0,0,0,0,0,0] + Control.tolist())
+    Torque_ =  Jac_Full_Trans.dot(Contact_Force) + Control_ - Gravity
+    Acc = sim_robot.accelFromTorques(Torque_)
+    return Acc
 
 # This function is used to get the dynamics function
 def Dynamics_Matrices(robot, contact_link_dictionary):
@@ -15,7 +33,6 @@ def Dynamics_Matrices(robot, contact_link_dictionary):
     D_q = robot.getMassMatrix()                             # List of list
     C_q_qdot = robot.getCoriolisForces()                    # List
     G_q = robot.getGravityForces([0,0,-9.8])                # List
-    # ipdb.set_trace()
     CG_q_qdot = List_Sum_fn(C_q_qdot, G_q)
     Jac_Full = []
     for contact_link_index_i in contact_link_dictionary.keys():
@@ -52,6 +69,26 @@ def Dynamics_To_Acc(sim_robot, DOF, robot_state, contact_force, control, contact
     D_q_Acc = Dynamics_RHS - CG_q_qdot
     Acc = np.matmul(np.linalg.pinv(D_q), D_q_Acc)
     return Acc
+
+def CollocationDynamicsConstraint(sim_robot, Acc_Mid, contact_link_dictionary, Contact_Force_Mid, Control_Mid):
+    # This function saves the constraint equations for the collocation point
+    Gravity = sim_robot.getGravityForces([0.0, 0.0, -9.81])
+    Jac_Full = []
+    for contact_link_index_i in contact_link_dictionary.keys():
+        robot_link_i = sim_robot.link(contact_link_index_i)
+        contact_link_index_i_extremities = contact_link_dictionary[contact_link_index_i]
+        for j in range(0, len(contact_link_index_i_extremities)):
+            robot_link_i_point_j = contact_link_index_i_extremities[j]
+            jac_link_i_point_j = robot_link_i.getPositionJacobian(robot_link_i_point_j)
+            for jac_link_i_point_j_coord_z in jac_link_i_point_j:
+                Jac_Full.append(jac_link_i_point_j_coord_z)
+    Jac_Full_Trans = np.array(map(list, zip(*Jac_Full)))
+    Control_Mid_ = np.array([0,0,0,0,0,0] + Control_Mid.tolist())
+    Torque_RHS_array =  Jac_Full_Trans.dot(Contact_Force_Mid) + Control_Mid_ - Gravity
+    Torque_RHS = Torque_RHS_array.tolist()
+    Torque_LHS = sim_robot.torquesFromAccel(Acc_Mid)
+    return vectorops.sub(Torque_LHS,Torque_RHS)
+
 
 def Control_2_Full_List(DOF, control_i):
     control_list = [0] * DOF

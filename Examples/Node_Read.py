@@ -4,7 +4,7 @@ from klampt import *
 from klampt import vis
 from klampt.vis.glrobotprogram import GLSimulationPlugin
 import numpy as np
-import ipdb, string
+import string
 import scipy as sp
 import scipy.sparse as sparse
 from klampt.model.trajectory import Trajectory

@@ -6,7 +6,7 @@ from klampt import *
 from klampt import vis
 from klampt.vis.glrobotprogram import GLSimulationPlugin
 import numpy as np
-import ipdb, string
+import string
 import scipy as sp
 import scipy.sparse as sparse
 from klampt.model.trajectory import Trajectory
@@ -56,8 +56,8 @@ def main():
 
     # The following function can be used in two ways: the first way is to load the Config_Init.config file while the second way is to load two
     # DOF, Config_Init, Velocity_Init = State_Loader_fn("Init_Config.config", Robot_Option)
-    # DOF, Config_Init, Velocity_Init = State_Loader_fn("Init_Config.txt", "Init_Velocity.txt", Robot_Option)
-    DOF, Config_Init, Velocity_Init = State_Loader_fn("Opt_Init_Config.txt", "Opt_Init_Velocity.txt", Robot_Option)
+    DOF, Config_Init, Velocity_Init = State_Loader_fn("Init_Config.txt", "Init_Velocity.txt", Robot_Option)
+    # DOF, Config_Init, Velocity_Init = State_Loader_fn("Opt_Init_Config.txt", "Opt_Init_Velocity.txt", Robot_Option)
 
     # State_Writer_fn(Config_Init, "Init_Config_from_txt.config", Robot_Option)
     # State_Writer_fn(Config_Init, Velocity_Init, "Inn_Config.txt", "Inn_Velo.txt",Robot_Option)
@@ -70,7 +70,8 @@ def main():
     State_Init = List_Append_fn(Config_Init, Velocity_Init)
 
     Config_Init, Velocity_Init = Robot_Init_Opt_fn(world, State_Init, Contact_Link_Dictionary, Contact_Status_Dictionary_Init, Terr_Model)
-    State_Writer_fn(Config_Init, Velocity_Init, "Opt_Init_Config.txt", "Opt_Init_Velocity.txt",Robot_Option)
+    State_Writer_fn(Config_Init, "Init_Config.config", Robot_Option)
+    # State_Writer_fn(Config_Init, Velocity_Init, "Opt_Init_Config.txt", "Opt_Init_Velocity.txt", Robot_Option)
 
     # Now it is the contact transition tree optimization
     # Root node initialization
@@ -84,7 +85,7 @@ def main():
         * if this does not work, then expand the current node into the adjacent nodes then do the Nodes_Connectivity_Opt
         """
         Opt_Flag = False
-        # Opt_Soln, Opt_Flag, Final_State = Nodes_Optimization_fn(world, treenode_parent, treenode_parent, Contact_Link_Dictionary, Terr_Model, Robot_Option, Grids_Number)
+        Opt_Soln, Opt_Flag, Final_State = Nodes_Optimization_fn(world, treenode_parent, treenode_parent, Contact_Link_Dictionary, Terr_Model, Robot_Option, Grids_Number)
         if Opt_Flag == True:
             # Here this means that the robot has already achieved a stabilized state with inertia shaping
             treenode_parent["IS"] = Opt_Soln

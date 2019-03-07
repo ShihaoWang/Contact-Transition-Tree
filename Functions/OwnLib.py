@@ -4,7 +4,8 @@
 import sys, os
 from random import randint
 import numpy as np
-import math, ipdb
+import math
+from klampt.math import so3,vectorops
 
 # This part is for the operation on list
 
@@ -93,15 +94,6 @@ def Random_Color_Generator_fn():
     return ret
 
 # Some dynamics functions
-def Kinetic_Energy_fn(sim_robot, x):
-    State_Tot_Number = len(x)
-    Configuration_Number = State_Tot_Number/2
-    D_q = sim_robot.getMassMatrix()
-    D_q = np.array(D_q)
-    qdot = np.array(x[Configuration_Number:])
-    KE_val = np.dot(np.transpose(qdot), np.dot(D_q, qdot))
-    return KE_val
-
 def State_Loader_fn(*args):
     if len(args) == 2:
         # In this case, the robot is only given the configuration file
@@ -200,7 +192,6 @@ def Robot_Link_Attributes_fn(sim_robot, link_index):
     print "Moment of Inertia of this link is : [" + List_to_String_fn(robot_link_i_mass_structure_Inertia) + "]"
     print "Rotation matrix of this link is : "
     Print_List_Mat_fn(robot_link_i_Rotation_Matrix_Trans)
-    # ipdb.set_trace()
 
 def Print_List_Mat_fn(list_matrix):
     # This function is used to print the list of list into an elegent format for visualization
