@@ -49,6 +49,8 @@ def Seed_Guess_Gene(world, treenode_parent, treenode_child, contact_link_diction
         robot_ref_state[i] = state_i_pos
         robot_ref_state[i + Robot_DOF] = 0
 
+    # Pos_List, Vel_List, Acc_List = PVAfromConfigRef(robot_init_state, robot_ref_state, Robot_DOF, grids, duration)
+
     State_Writer_fn(robot_ref_state[0:Robot_DOF], "Ref_Config.config", robot_option)
 
     # Second step is to project this reference robot state into the constrained manifold
@@ -59,6 +61,7 @@ def Seed_Guess_Gene(world, treenode_parent, treenode_child, contact_link_diction
 
     # Third step is to construct a parabolic spline to connect the initial state to the goal configuration
     # For each DOF, its path should be of the following form: y(t) = a*t^2 + b*t + c
+    # However, I find it can be interesting to directly make use of the backward initialization.
     DOF_Parabolic_Parameter_List = []
     for i in range(0, Robot_DOF):
         c_i = robot_init_state[i]
@@ -115,8 +118,32 @@ def Seed_Guess_Gene(world, treenode_parent, treenode_child, contact_link_diction
 
     for i in range(0, grids):
         Seed_Guess_List = Seed_Guess_List + Contact_Force_List[i]
-    DOF = len(Goal_Config)
-    return Seed_Guess_List, DOF, Contact_Force_List_Length
+    return Seed_Guess_List, Robot_DOF, Contact_Force_List_Length
+
+def PVAfromConfigRef(robot_init_state, robot_ref_state, Robot_DOF, Grids, duration):
+    # This function is used to generate the PVA using Config_Ref
+    Pos_List = [];          Vel_List = [];              Acc_List = []
+    deltaT = duration/(Grids - 1.0)
+    for i in range(0, Robot_DOF):
+        state_acc_i = -1.0 * robot_init_state[Robot_DOF + i]/duration
+        state_vel_i = []
+        state_pos_i = []
+        for j in range(0, Grids):
+            t = j * deltaT
+            state_vel_i_grid_j = -state_acc_i * (duration - t)
+            state_vel_i.append(state_vel_i_grid_j)
+            state_pos_i_grid_j = robot_ref_state[i] - 0.5 * state_acc_i * (duration - t) * (duration - t)
+            state_pos_i.append(state_pos_i_grid_j)
+        Pos_List_New = np.array(state_pos_i).tolist()
+        Vel_List_New = np.copy(state_vel_i).tolist()
+        Acc_List_New = np.full(Grids, state_acc_i).tolist()
+        Pos_List.append(Pos_List_New)
+        Vel_List.append(Vel_List_New)
+        Acc_List.append(Acc_List_New)
+    Pos_List_ = map(list, zip(*Pos_List))
+    Vel_List_ = map(list, zip(*Vel_List))
+    Acc_List_ = map(list, zip(*Acc_List))
+    return Pos_List_, Vel_List_, Acc_List_
 
 def Parabolic_Para_All_Evaluation(parabolic_parameter_list, time_list):
     Pos_List = [];          Vel_List = [];              Acc_List = []
@@ -167,7 +194,7 @@ def Seed_Guess_Unzip(seed_guess_list, DOF, contact_force_len, grids):
     # Get the control list
     Control_List_All = seed_guess_list[Start_Index:(Start_Index + Total_Control_Number)]
     Start_Index = Start_Index + Total_Control_Number
-    
+
     # Get the contact force list
     Contact_Force_List = seed_guess_list[Start_Index:]
 

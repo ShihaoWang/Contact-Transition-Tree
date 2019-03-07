@@ -85,7 +85,7 @@ def main():
         * if this does not work, then expand the current node into the adjacent nodes then do the Nodes_Connectivity_Opt
         """
         Opt_Flag = False
-        Opt_Soln, Opt_Flag, Final_State = Nodes_Optimization_fn(world, treenode_parent, treenode_parent, Contact_Link_Dictionary, Terr_Model, Robot_Option, Grids_Number)
+        # Opt_Soln, Opt_Flag, Final_State = Nodes_Optimization_fn(world, treenode_parent, treenode_parent, Contact_Link_Dictionary, Terr_Model, Robot_Option, Grids_Number)
         if Opt_Flag == True:
             # Here this means that the robot has already achieved a stabilized state with inertia shaping
             treenode_parent["IS"] = Opt_Soln
@@ -102,6 +102,7 @@ def main():
                 # However, here the child_node_i has not been initialized
                 treenode_child = TreeNode_Dict_Init_CS(child_node_i_contact_status)
                 Opt_Soln, Opt_Flag, Final_State = Nodes_Optimization_fn(world, treenode_parent, treenode_child, Contact_Link_Dictionary, Terr_Model, Robot_Option, Grids_Number)
+                import ipdb; ipdb.set_trace()
                 if Opt_Flag == True:
                     # This means that this child node is connectable
                     contact_type, contact_link_cmp_dict, contact_link_itc_dict = TreeNode_Status_CMP(treenode_parent, treenode_child)

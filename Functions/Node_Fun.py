@@ -163,74 +163,22 @@ def Node_Expansion_fn(treenode_parent, contact_link_list):
             Children_nodes_contact_status_list.append(child_node_i_contact_status)
         else:
             """
-                This means that there is at least an edge contact possibility in this contact link
-                Three possibilities:
-                                    1. No contact:              ======>         Face contact or Edge contact
-                                    2. Edge contact:            ======>         No contact or Face contact
-                                    3. Face contact:            ======>         Edge contact or No contact
+                Two possibilities:
+                                    1. No contact:              ======>         In contact
+                                    2. In contact:              ======>         Not in contact
             """
             vertices_number = len(parent_contact_link_i_status)
             child_node_i_contact_status_sum = sum(parent_contact_link_i_status)
             if child_node_i_contact_status_sum == 0:
-                # Then this is the No contact status, we should add the Edge contact or the Face contact case.
-                # ADD Face contact
                 child_node_i_contact_status = copy.deepcopy(parent_contact_status)
                 child_node_i_contact_status[contact_link_list[i]] = [1] * vertices_number
                 Children_nodes_contact_status_list.append(child_node_i_contact_status)
-
-                # ADD Edge contact
-                for j in range(0, vertices_number):
-                    child_node_i_contact_status = copy.deepcopy(parent_contact_status)
-                    child_node_i_contact_status[contact_link_list[i]] = Edge_Node_from_Face_Add(j, vertices_number)
-                    Children_nodes_contact_status_list.append(child_node_i_contact_status)
             else:
-                if child_node_i_contact_status_sum == vertices_number:
-                    # This is the Face contact case, we should add the Edge contact or No contact case.
-
-                    # ADD No contact
-                    child_node_i_contact_status = copy.deepcopy(parent_contact_status)
-                    child_node_i_contact_status[contact_link_list[i]] = [0] * vertices_number
-                    Children_nodes_contact_status_list.append(child_node_i_contact_status)
-
-                    # Add Edge contact
-                    for j in range(0, vertices_number):
-                        child_node_i_contact_status = copy.deepcopy(parent_contact_status)
-                        child_node_i_contact_status[contact_link_list[i]] = Edge_Node_from_Face_Minus(j, vertices_number)
-                        Children_nodes_contact_status_list.append(child_node_i_contact_status)
-                else:
-                    # This is the Edge contact case, we should add the Face contact or No contact case.
-
-                    # Add Face contact
-                    child_node_i_contact_status = copy.deepcopy(parent_contact_status)
-                    child_node_i_contact_status[contact_link_list[i]] = [1] * vertices_number
-                    Children_nodes_contact_status_list.append(child_node_i_contact_status)
-
-                    # Add No contact
-                    child_node_i_contact_status = copy.deepcopy(parent_contact_status)
-                    child_node_i_contact_status[contact_link_list[i]] = [0] * vertices_number
-                    Children_nodes_contact_status_list.append(child_node_i_contact_status)
-
+                # ADD No contact
+                child_node_i_contact_status = copy.deepcopy(parent_contact_status)
+                child_node_i_contact_status[contact_link_list[i]] = [0] * vertices_number
+                Children_nodes_contact_status_list.append(child_node_i_contact_status)
     return Children_nodes_contact_status_list
-
-def Edge_Node_from_Face_Add(edge_index, vertices_number):
-    # This function is used to generate the edge contact status from a given face vertices number
-    edge_contact = [0] * vertices_number
-    edge_contact[edge_index] = 1
-    if edge_index == vertices_number-1:
-        edge_contact[0] = 1
-    else:
-        edge_contact[edge_index + 1] = 1
-    return edge_contact
-
-def Edge_Node_from_Face_Minus(edge_index, vertices_number):
-    # This function is used to generate the edge contact status from a given face vertices number
-    edge_contact = [1] * vertices_number
-    edge_contact[edge_index] = 0
-    if edge_index == vertices_number-1:
-        edge_contact[0] = 0
-    else:
-        edge_contact[edge_index + 1] = 0
-    return edge_contact
 
 def Final_Node_2_Root_Node(Final_Node, All_Nodes):
     # This function is used to get the trajectories from the final node back to the root node

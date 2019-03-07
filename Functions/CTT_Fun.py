@@ -104,11 +104,13 @@ def Nodes_Optimization_Inner_Opt(world, treenode_parent, treenode_child, contact
     Nodes_Optimization_Inner.lb = lb;                       Nodes_Optimization_Inner.ub = ub
     cfg = snoptConfig()
     cfg.printLevel = 1;
-    cfg.minorPrintLevel = 1
     cfg.printFile = "result.txt"
     cfg.majorIterLimit = 3000
     cfg.minorIterLimit = 50000000
     cfg.iterLimit = 50000000
+
+    cfg.addIntOption("Major print level", 1)
+    cfg.addIntOption("Minor print level", 1)
 
     slv = solver(Nodes_Optimization_Inner, cfg)
     # rst = slv.solveRand()
@@ -196,7 +198,7 @@ def Nodes_Optimization_ObjNConstraint(world, treenode_parent, treenode_child, co
 
         List_Obj_Update(Dynamics_Constraint_i, 0, y_val, y_type)
 
-        if (i == grids-1) and (contact_type == 0):
+        if (i == grids-1) and ((contact_type == 0) or (contact_type == -1)):
             # Inertial shaping finally stabilizes the robot
             List_Obj_Update(Acc_Back, 0, y_val, y_type)
 
@@ -205,9 +207,6 @@ def Nodes_Optimization_ObjNConstraint(world, treenode_parent, treenode_child, co
                     Contact Maintenance!
                     The previous unchanged active contact constraint have to be satisfied
     """
-                                   # list of dictionaries according to contact_link_list
-    import ipdb; ipdb.set_trace()
-
     Ref_Contact_PosNVel = copy.deepcopy(treenode_parent["Contact_PosNVel"])
     for i in range(0, grids):
         # Robot state dynamics at the each grid i
@@ -257,25 +256,41 @@ def Nodes_Optimization_ObjNConstraint(world, treenode_parent, treenode_child, co
                     Contact Force: Complementarity and Feasibility
                                    1. The net force should lie within the friction cone.
                                    2. The inactive contact points should not have nonzero forces there.
+                    * For inertial-shaping, both treenode_parent["Contact_Status"] and treenode_child["Contact_Status"] will work.
+                    * For contact retract, now I consider it to be first-grid in contact but then the rest is inertia shaping!
+                    * For contact addition, the last grid the robot will make a new contact.
     """
-    Transien_Contact_Status = copy.deepcopy(treenode_parent["Contact_Status"])
-    Terminal_Contact_Status = copy.deepcopy(treenode_child["Contact_Status"])
-    for i in range(0, grids):
-        At_i_Contact_Force = Contact_Force_List_Array[i]            # This contact force corresponds to the contat point Jacobian matrix
-        # Here the contact force is a column vector
-        # The order of the contact force obeys the order of the contact link list
-        if i<grids-1:
-            Contact_Force_Constraint(At_i_Contact_Force, contact_link_list, Transien_Contact_Status, terr_model, y_val, y_type)
+    Parent_Contact_Status = copy.deepcopy(treenode_parent["Contact_Status"])
+    Child_Contact_Status = copy.deepcopy(treenode_child["Contact_Status"])
+    if contact_type == 0:
+        for i in range(0, grids):
+            Contact_Force_i = Contact_Force_List_Array[i]
+            Contact_Force_Constraint(Contact_Force_i, contact_link_list, Parent_Contact_Status, terr_model, y_val, y_type)
+    else:
+        if(contact_type == -1):
+            for i in range(0, grids):
+                Contact_Force_i = Contact_Force_List_Array[i]
+                if(i ==0):
+                    Contact_Force_Constraint(Contact_Force_i, contact_link_list, Parent_Contact_Status, terr_model, y_val, y_type)
+                else:
+                    Contact_Force_Constraint(Contact_Force_i, contact_link_list, Child_Contact_Status, terr_model, y_val, y_type)
         else:
-            Contact_Force_Constraint(At_i_Contact_Force, contact_link_list, Terminal_Contact_Status, terr_model, y_val, y_type)
+            for i in range(0, grids):
+                Contact_Force_i = Contact_Force_List_Array[i]
+                if(i ==grids-1):
+                    Contact_Force_Constraint(Contact_Force_i, contact_link_list, Child_Contact_Status, terr_model, y_val, y_type)
+                else:
+                    Contact_Force_Constraint(Contact_Force_i, contact_link_list, Parent_Contact_Status, terr_model, y_val, y_type)
     """
         Constraint 6:
                     Kinetic energy threshold constraint
                     Inertial shaping to minimize the terminal kinetic energy to be within a threshold
     """
-    if contact_type == 0:
+
+    if ((contact_type == 0) or (contact_type == -1)):
         KE_Threshold = 0.1
-        y_val.append(KE_Threshold - Final_KE);                                     y_type.append(1)
+        y_val.append(KE_Threshold - Final_KE);
+        y_type.append(1)
 
     """
         Constraint 7: self-collision constraint to be added in future!
