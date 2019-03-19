@@ -13,7 +13,7 @@ Installation has been tested on a fresh install of Ubuntu 14.04 with Python 2.7.
 ### Dependencies
 Package compilation requres:
 * [Klampt](https://github.com/krishauser/Klampt): An open-source, cross-platform software package for robot modeling, simulating, planning, optimization, and visualization.
-* [trajOptLib](https://gitlab.oit.duke.edu/gt70/trajOptLib) : A library for trajectory optimization using direct transcription approach. (This package replies on [SNOPT](https://github.com/snopt) or [IPOPT](https://github.com/coin-or/Ipopt) and please have at least one of these two solvers ready to use this package.)
+* [trajOptLib](https://gitlab.oit.duke.edu/gt70/trajOptLib) : A library for trajectory optimization using direct transcription approach. (This package relies on [SNOPT](https://github.com/snopt) and please have this solver ready to use this package.)
 
 >You need to follow the installation instruction of these two dependencies to make use of this _contact transition tree optimization_ package.  
 
@@ -25,7 +25,7 @@ cd Contact\ Transition\ Tree/
 ```
 
 ## Instructions
-This package supports any humanoid robot and reads in any environment customized by the user to satisfy the need to real-world humanoid fall mitigation. Since this package replies on [Klampt](https://github.com/krishauser/Klampt) for operations on robot, a Klampt preferred URDF format has to be changed accordingly to enable the robot feature identification. A Klampt URDF tutorial can be found [here](https://github.com/krishauser/Klampt/blob/master/Documentation/Tutorials/Import-and-calibrate-urdf.md).
+This package supports any humanoid robot and reads in any environment customized by the user to satisfy the need to real-world humanoid fall mitigation. Since this package relies on [Klampt](https://github.com/krishauser/Klampt) for operations on robot, a Klampt preferred URDF format has to be changed accordingly to enable the robot feature identification. A Klampt URDF tutorial can be found [here](https://github.com/krishauser/Klampt/blob/master/Documentation/Tutorials/Import-and-calibrate-urdf.md).
 
 ### Import Robot
 
